@@ -20,6 +20,7 @@ import AdminBusinessListPage from './pages/admin/AdminBusinessListPage.jsx'
 import AdminBusinessDetailPage from './pages/admin/AdminBusinessDetailPage.jsx'
 import AdminUserListPage from './pages/admin/AdminUserListPage.jsx'
 import AdminUserDetailPage from './pages/admin/AdminUserDetailPage.jsx'
+import AdminHealthPage from './pages/admin/AdminHealthPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
 import ServiceListPage from './pages/services/ServiceListPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
@@ -326,7 +327,7 @@ function App() {
                     path="admin/health"
                     element={
                       <AdminRoute>
-                        <div>Admin Health</div>
+                        <AdminHealthPage />
                       </AdminRoute>
                     }
                   />

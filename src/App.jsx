@@ -12,6 +12,7 @@ import NotFound from './components/layout/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
+import DashboardPage from './pages/dashboard/DashboardPage.jsx'
 
 function App() {
   return (
@@ -54,7 +55,7 @@ function App() {
                     path="dashboard"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>Dashboard</div>
+                        <DashboardPage />
                       </RoleRoute>
                     }
                   />

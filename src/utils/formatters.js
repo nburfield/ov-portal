@@ -37,3 +37,7 @@ export function formatAddress(location) {
   address += `, ${city}, ${state} ${zip}`
   return address
 }
+
+export function formatNumber(num) {
+  return new Intl.NumberFormat('en-US').format(num)
+}

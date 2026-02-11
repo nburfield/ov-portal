@@ -1,5 +1,6 @@
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { BusinessProvider } from './contexts/BusinessContext.jsx'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
             <p className="text-gray-600">Authentication system initialized</p>
           </div>
         </div>
+        <ToastContainer position="top-right" autoClose={5000} stacked />
       </BusinessProvider>
     </AuthProvider>
   )

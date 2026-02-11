@@ -15,6 +15,7 @@ import RegisterPage from './pages/auth/RegisterPage.jsx'
 import DashboardPage from './pages/dashboard/DashboardPage.jsx'
 import BusinessPage from './pages/business/BusinessPage.jsx'
 import UserListPage from './pages/users/UserListPage.jsx'
+import UserDetailPage from './pages/users/UserDetailPage.jsx'
 
 function App() {
   return (
@@ -81,7 +82,7 @@ function App() {
                     path="users/:key"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>User Detail</div>
+                        <UserDetailPage />
                       </RoleRoute>
                     }
                   />

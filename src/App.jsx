@@ -27,6 +27,8 @@ import FleetDetailPage from './pages/fleet/FleetDetailPage.jsx'
 import WorkOrderListPage from './pages/workorders/WorkOrderListPage.jsx'
 import WorkOrderForm from './pages/workorders/WorkOrderForm.jsx'
 import WorkOrderDetailPage from './pages/workorders/WorkOrderDetailPage.jsx'
+import WorkTaskListPage from './pages/worktasks/WorkTaskListPage.jsx'
+import WorkTaskForm from './pages/worktasks/WorkTaskForm.jsx'
 
 function App() {
   return (
@@ -213,7 +215,15 @@ function App() {
                     path="worktasks"
                     element={
                       <RoleRoute minRole="worker">
-                        <div>Work Tasks</div>
+                        <WorkTaskListPage />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="worktasks/create"
+                    element={
+                      <RoleRoute minRole="manager">
+                        <WorkTaskForm />
                       </RoleRoute>
                     }
                   />

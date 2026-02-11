@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Optional: point to sitemap if available
+# Sitemap: https://onevizn.com/sitemap.xml

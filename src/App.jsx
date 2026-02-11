@@ -30,6 +30,7 @@ import WorkOrderDetailPage from './pages/workorders/WorkOrderDetailPage.jsx'
 import WorkTaskListPage from './pages/worktasks/WorkTaskListPage.jsx'
 import WorkTaskForm from './pages/worktasks/WorkTaskForm.jsx'
 import WorkTaskDetailPage from './pages/worktasks/WorkTaskDetailPage.jsx'
+import InvoiceListPage from './pages/invoices/InvoiceListPage.jsx'
 
 function App() {
   return (
@@ -239,15 +240,15 @@ function App() {
                   <Route
                     path="invoices"
                     element={
-                      <RoleRoute minRole="manager">
-                        <div>Invoices</div>
+                      <RoleRoute minRole="customer">
+                        <InvoiceListPage />
                       </RoleRoute>
                     }
                   />
                   <Route
                     path="invoices/:key"
                     element={
-                      <RoleRoute minRole="manager">
+                      <RoleRoute minRole="customer">
                         <div>Invoice Detail</div>
                       </RoleRoute>
                     }

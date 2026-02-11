@@ -5,6 +5,8 @@ import { useDataTable } from '../../hooks/useDataTable'
 import ColumnHeader from './ColumnHeader'
 import TableToolbar from './TableToolbar'
 import TablePagination from './TablePagination'
+import BulkActions from './BulkActions'
+import ExportButton from './ExportButton'
 import Skeleton from '../ui/Skeleton'
 import EmptyState from '../ui/EmptyState'
 
@@ -20,6 +22,8 @@ const DataTable = ({
   initialColumnVisibility = {},
   initialColumnFilters = [],
   initialGlobalFilter = '',
+  onExportCSV,
+  onExportPDF,
 }) => {
   const selectColumn = enableSelection
     ? {
@@ -63,12 +67,27 @@ const DataTable = ({
 
   const { rows } = table.getRowModel()
 
+  const selectedCount = table.getSelectedRowModel().rows.length
+  const totalCount = table.getFilteredRowModel().rows.length
+
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+      {selectedCount > 0 && (
+        <BulkActions
+          selectedCount={selectedCount}
+          totalCount={totalCount}
+          onSelectAll={table.getToggleAllRowsSelectedHandler()}
+          onClearSelection={() => table.toggleAllRowsSelected(false)}
+        >
+          <ExportButton onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+        </BulkActions>
+      )}
       <TableToolbar
         table={table}
         globalFilter={table.getState().globalFilter}
         setGlobalFilter={table.setGlobalFilter}
+        onExportCSV={onExportCSV}
+        onExportPDF={onExportPDF}
       />
       {isLoading ? (
         <div className="p-4">

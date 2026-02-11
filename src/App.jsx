@@ -21,6 +21,7 @@ import AdminBusinessDetailPage from './pages/admin/AdminBusinessDetailPage.jsx'
 import AdminUserListPage from './pages/admin/AdminUserListPage.jsx'
 import AdminUserDetailPage from './pages/admin/AdminUserDetailPage.jsx'
 import AdminHealthPage from './pages/admin/AdminHealthPage.jsx'
+import AdminDataExplorerPage from './pages/admin/AdminDataExplorerPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
 import ServiceListPage from './pages/services/ServiceListPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
@@ -335,7 +336,7 @@ function App() {
                     path="admin/data"
                     element={
                       <AdminRoute>
-                        <div>Admin Data</div>
+                        <AdminDataExplorerPage />
                       </AdminRoute>
                     }
                   />

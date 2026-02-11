@@ -17,6 +17,7 @@ import BusinessPage from './pages/business/BusinessPage.jsx'
 import UserListPage from './pages/users/UserListPage.jsx'
 import UserDetailPage from './pages/users/UserDetailPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
+import ServiceListPage from './pages/services/ServiceListPage.jsx'
 
 function App() {
   return (
@@ -99,7 +100,7 @@ function App() {
                     path="services"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>Services</div>
+                        <ServiceListPage />
                       </RoleRoute>
                     }
                   />

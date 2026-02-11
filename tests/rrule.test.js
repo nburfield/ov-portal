@@ -9,6 +9,14 @@ describe('rrule utility', () => {
     expect(result.freq).toBe(2) // RRule.WEEKLY
     expect(result.interval).toBe(2)
     expect(result.byDay).toEqual(['MO', 'FR'])
+    expect(result.bymonthday).toBeUndefined()
+  })
+
+  it('should parse RRULE string with bymonthday', () => {
+    const rruleString = 'FREQ=MONTHLY;BYMONTHDAY=15'
+    const result = parseRRule(rruleString)
+    expect(result.freq).toBe(1) // RRule.MONTHLY
+    expect(result.bymonthday).toBe(15)
   })
 
   it('should build RRULE string', () => {
@@ -21,6 +29,16 @@ describe('rrule utility', () => {
     expect(result).toContain('FREQ=WEEKLY')
     expect(result).toContain('INTERVAL=2')
     expect(result).toContain('BYDAY=MO,FR')
+  })
+
+  it('should build RRULE string with bymonthday', () => {
+    const options = {
+      freq: 1, // MONTHLY
+      bymonthday: 15,
+    }
+    const result = buildRRule(options)
+    expect(result).toContain('FREQ=MONTHLY')
+    expect(result).toContain('BYMONTHDAY=15')
   })
 
   it('should convert to human readable', () => {

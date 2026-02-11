@@ -19,7 +19,7 @@ const weekdayToString = (wd) => {
 /**
  * Parses an iCalendar RRULE string into an object.
  * @param {string} rruleString - The RRULE string (e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR")
- * @returns {object} - Object with freq, interval, byDay, until, count
+ * @returns {object} - Object with freq, interval, byDay, bymonthday, until, count
  */
 export function parseRRule(rruleString) {
   const rule = RRule.fromString(rruleString)
@@ -29,6 +29,7 @@ export function parseRRule(rruleString) {
     freq: options.freq,
     interval: options.interval,
     byDay: options.byweekday ? options.byweekday.map((wd) => weekdayToString(wd)) : undefined,
+    bymonthday: options.bymonthday ? options.bymonthday[0] : undefined,
     until: options.until,
     count: options.count,
   }
@@ -36,7 +37,7 @@ export function parseRRule(rruleString) {
 
 /**
  * Builds an RRULE string from an options object.
- * @param {object} options - Object with freq, interval, byDay, until, count
+ * @param {object} options - Object with freq, interval, byDay, bymonthday, until, count
  * @returns {string} - The RRULE string
  */
 export function buildRRule(options) {
@@ -44,6 +45,7 @@ export function buildRRule(options) {
     freq: options.freq,
     interval: options.interval || 1,
     byweekday: options.byDay ? options.byDay.map((day) => weekdayMap[day]) : undefined,
+    bymonthday: options.bymonthday ? [options.bymonthday] : undefined,
     until: options.until,
     count: options.count,
   }

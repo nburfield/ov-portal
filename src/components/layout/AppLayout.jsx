@@ -9,6 +9,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
+import Header from './Header'
 
 const AppLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -37,18 +38,7 @@ const AppLayout = () => {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 md:hidden"
-          >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-          <h1 className="ml-4 text-xl font-semibold text-gray-900">OneVizn Portal</h1>
-        </div>
-        {/* Additional header content can go here */}
-      </header>
+      <Header onToggleSidebar={toggleSidebar} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}

@@ -13,6 +13,7 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import DashboardPage from './pages/dashboard/DashboardPage.jsx'
+import BusinessPage from './pages/business/BusinessPage.jsx'
 
 function App() {
   return (
@@ -63,7 +64,7 @@ function App() {
                     path="business"
                     element={
                       <RoleRoute minRole="owner">
-                        <div>Business</div>
+                        <BusinessPage />
                       </RoleRoute>
                     }
                   />

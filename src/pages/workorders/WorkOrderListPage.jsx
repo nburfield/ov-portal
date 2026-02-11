@@ -11,7 +11,7 @@ import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
 import { hasMinRole, ROLES } from '../../constants/roles'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline'
 
 const WorkOrderListPage = () => {
   const navigate = useNavigate()
@@ -44,8 +44,7 @@ const WorkOrderListPage = () => {
   }
 
   const handleCreateWorkOrder = () => {
-    // TODO: Navigate to create work order page
-    showToast('Create work order functionality not implemented yet', 'info')
+    navigate('/workorders/create')
   }
 
   const handleBulkChangeStatus = async (newStatus) => {
@@ -164,6 +163,28 @@ const WorkOrderListPage = () => {
         if (!filterValue) return true
         return row.original.status === filterValue
       },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/workorders/${row.original.key}/edit`)
+            }}
+            className="flex items-center gap-1"
+          >
+            <PencilIcon className="h-4 w-4" />
+            Edit
+          </Button>
+        </div>
+      ),
+      enableSorting: false,
+      enableResizing: false,
     },
   ]
 

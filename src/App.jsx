@@ -25,6 +25,7 @@ import LocationListPage from './pages/locations/LocationListPage.jsx'
 import LocationDetailPage from './pages/locations/LocationDetailPage.jsx'
 import FleetDetailPage from './pages/fleet/FleetDetailPage.jsx'
 import WorkOrderListPage from './pages/workorders/WorkOrderListPage.jsx'
+import WorkOrderForm from './pages/workorders/WorkOrderForm.jsx'
 
 function App() {
   return (
@@ -180,6 +181,22 @@ function App() {
                     element={
                       <RoleRoute minRole="worker">
                         <WorkOrderListPage />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="workorders/create"
+                    element={
+                      <RoleRoute minRole="worker">
+                        <WorkOrderForm />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="workorders/:key/edit"
+                    element={
+                      <RoleRoute minRole="worker">
+                        <WorkOrderForm />
                       </RoleRoute>
                     }
                   />

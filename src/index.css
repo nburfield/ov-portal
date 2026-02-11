@@ -1,1 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap');
+
 @import 'tailwindcss';
+
+@layer base {
+  :root {
+    font-size: 14px;
+    --font-family-sans: Inter, system-ui, -apple-system, sans-serif;
+    --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'Roboto Mono', monospace;
+    --bg-primary: 255 255 255;
+    --bg-secondary: 248 250 252;
+    --bg-sidebar: 241 245 249;
+    --text-primary: 15 23 42;
+    --text-secondary: 100 116 139;
+    --accent: 37 99 235;
+    --accent-hover: 29 78 216;
+    --border: 226 232 240;
+    --success: 22 163 74;
+    --warning: 217 119 6;
+    --danger: 220 38 38;
+    --info: 37 99 235;
+  }
+
+  .dark {
+    --bg-primary: 15 23 42;
+    --bg-secondary: 30 41 59;
+    --bg-sidebar: 30 41 59;
+    --text-primary: 248 250 252;
+    --text-secondary: 148 163 184;
+    --accent: 59 130 246;
+    --accent-hover: 96 165 250;
+    --border: 51 65 85;
+    --success: 34 197 94;
+    --warning: 245 158 11;
+    --danger: 239 68 68;
+    --info: 96 165 250;
+  }
+
+  h1 {
+    @apply text-2xl font-semibold;
+  }
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  h3 {
+    @apply text-lg font-semibold;
+  }
+  h4 {
+    @apply text-base font-semibold;
+  }
+}

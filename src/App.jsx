@@ -35,6 +35,7 @@ import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage.jsx'
 import SubcontractorListPage from './pages/subcontractors/SubcontractorListPage.jsx'
 import AuditLogPage from './pages/audit/AuditLogPage.jsx'
 import ProfilePage from './pages/profile/ProfilePage.jsx'
+import SettingsPage from './pages/settings/SettingsPage.jsx'
 
 function App() {
   return (
@@ -282,7 +283,7 @@ function App() {
                     }
                   />
                   <Route path="profile" element={<ProfilePage />} />
-                  <Route path="settings" element={<div>Settings</div>} />
+                  <Route path="settings" element={<SettingsPage />} />
 
                   {/* Super admin routes */}
                   <Route

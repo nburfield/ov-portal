@@ -31,3 +31,11 @@ export async function getUserRoles() {
   const response = await api.get('/api/v2/auth/roles')
   return response.data
 }
+
+export async function changePassword({ current_password, new_password }) {
+  const response = await api.post('/api/v2/auth/change-password', {
+    current_password,
+    new_password,
+  })
+  return response.data
+}

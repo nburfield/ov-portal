@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { flexRender } from '@tanstack/react-table'
 import { cn } from '../../utils/cn'
 import { useDataTable } from '../../hooks/useDataTable'
@@ -24,6 +24,8 @@ const DataTable = ({
   initialGlobalFilter = '',
   onExportCSV,
   onExportPDF,
+  bulkActions,
+  onSelectionChange,
 }) => {
   const selectColumn = enableSelection
     ? {
@@ -70,6 +72,14 @@ const DataTable = ({
   const selectedCount = table.getSelectedRowModel().rows.length
   const totalCount = table.getFilteredRowModel().rows.length
 
+  // Notify parent of selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      const selectedRows = table.getSelectedRowModel().rows
+      onSelectionChange(selectedRows)
+    }
+  }, [table, onSelectionChange])
+
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
       {selectedCount > 0 && (
@@ -79,6 +89,7 @@ const DataTable = ({
           onSelectAll={table.getToggleAllRowsSelectedHandler()}
           onClearSelection={() => table.toggleAllRowsSelected(false)}
         >
+          {bulkActions}
           <ExportButton onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
         </BulkActions>
       )}

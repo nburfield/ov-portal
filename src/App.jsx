@@ -23,6 +23,7 @@ import CertificationListPage from './pages/certifications/CertificationListPage.
 import CustomerListPage from './pages/customers/CustomerListPage.jsx'
 import LocationListPage from './pages/locations/LocationListPage.jsx'
 import LocationDetailPage from './pages/locations/LocationDetailPage.jsx'
+import FleetDetailPage from './pages/fleet/FleetDetailPage.jsx'
 
 function App() {
   return (
@@ -169,7 +170,7 @@ function App() {
                     path="fleet/:key"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>Fleet Detail</div>
+                        <FleetDetailPage />
                       </RoleRoute>
                     }
                   />

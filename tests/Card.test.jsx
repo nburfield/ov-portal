@@ -25,7 +25,7 @@ describe('Card', () => {
   it('applies default styles', () => {
     render(<Card>Content</Card>)
     const card = screen.getByText('Content').parentElement
-    expect(card).toHaveClass('bg-white', 'border', 'rounded-lg', 'shadow-sm', 'p-4')
+    expect(card).toHaveClass('bg-white', 'border', 'rounded-lg', 'shadow-sm', 'p-6')
   })
 
   it('applies custom className', () => {

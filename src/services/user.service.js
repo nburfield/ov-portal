@@ -1,25 +1,25 @@
 import api from './api.js'
 
 export const getAll = async (params = {}) => {
-  const response = await api.get('/api/v2/businesses', { params })
+  const response = await api.get('/api/v2/users', { params })
   return response.data
 }
 
 export const getByKey = async (key) => {
-  const response = await api.get(`/api/v2/businesses/${key}`)
+  const response = await api.get(`/api/v2/users/${key}`)
   return response.data
 }
 
 export const create = async (data) => {
-  const response = await api.post('/api/v2/businesses', data)
+  const response = await api.post('/api/v2/users', data)
   return response.data
 }
 
 export const update = async (key, data) => {
-  const response = await api.put(`/api/v2/businesses/${key}`, data)
+  const response = await api.put(`/api/v2/users/${key}`, data)
   return response.data
 }
 
 export const remove = async (key) => {
-  await api.delete(`/api/v2/businesses/${key}`)
+  await api.delete(`/api/v2/users/${key}`)
 }

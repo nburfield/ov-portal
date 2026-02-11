@@ -29,6 +29,7 @@ import WorkOrderForm from './pages/workorders/WorkOrderForm.jsx'
 import WorkOrderDetailPage from './pages/workorders/WorkOrderDetailPage.jsx'
 import WorkTaskListPage from './pages/worktasks/WorkTaskListPage.jsx'
 import WorkTaskForm from './pages/worktasks/WorkTaskForm.jsx'
+import WorkTaskDetailPage from './pages/worktasks/WorkTaskDetailPage.jsx'
 
 function App() {
   return (
@@ -231,7 +232,7 @@ function App() {
                     path="worktasks/:key"
                     element={
                       <RoleRoute minRole="worker">
-                        <div>Work Task Detail</div>
+                        <WorkTaskDetailPage />
                       </RoleRoute>
                     }
                   />

@@ -16,6 +16,8 @@ import DashboardPage from './pages/dashboard/DashboardPage.jsx'
 import BusinessPage from './pages/business/BusinessPage.jsx'
 import UserListPage from './pages/users/UserListPage.jsx'
 import UserDetailPage from './pages/users/UserDetailPage.jsx'
+import AdminBusinessListPage from './pages/admin/AdminBusinessListPage.jsx'
+import AdminBusinessDetailPage from './pages/admin/AdminBusinessDetailPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
 import ServiceListPage from './pages/services/ServiceListPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
@@ -290,7 +292,7 @@ function App() {
                     path="admin/businesses"
                     element={
                       <AdminRoute>
-                        <div>Admin Businesses</div>
+                        <AdminBusinessListPage />
                       </AdminRoute>
                     }
                   />
@@ -298,7 +300,7 @@ function App() {
                     path="admin/businesses/:key"
                     element={
                       <AdminRoute>
-                        <div>Admin Business Detail</div>
+                        <AdminBusinessDetailPage />
                       </AdminRoute>
                     }
                   />

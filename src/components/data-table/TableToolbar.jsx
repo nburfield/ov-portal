@@ -1,10 +1,29 @@
-import React, { useState } from 'react'
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import React, { useState, useEffect } from 'react'
+import {
+  MagnifyingGlassIcon,
+  AdjustmentsHorizontalIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  DocumentIcon,
+} from '@heroicons/react/24/outline'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 
-const TableToolbar = ({ table, globalFilter, setGlobalFilter }) => {
+const TableToolbar = ({ table, globalFilter, onGlobalFilterChange, onExportCSV, onExportPDF }) => {
   const [showColumnVisibility, setShowColumnVisibility] = useState(false)
+  const [searchTerm, setSearchTerm] = useState(globalFilter ?? '')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onGlobalFilterChange(searchTerm)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm, onGlobalFilterChange])
+
+  const handleResetFilters = () => {
+    setSearchTerm('')
+    table.resetColumnFilters()
+  }
 
   return (
     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -14,13 +33,30 @@ const TableToolbar = ({ table, globalFilter, setGlobalFilter }) => {
           <Input
             type="text"
             placeholder="Search..."
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 w-64"
           />
         </div>
       </div>
       <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResetFilters}
+          className="flex items-center"
+        >
+          <ArrowPathIcon className="h-4 w-4 mr-2" />
+          Reset
+        </Button>
+        <Button variant="outline" size="sm" onClick={onExportCSV} className="flex items-center">
+          <DocumentTextIcon className="h-4 w-4 mr-2" />
+          CSV
+        </Button>
+        <Button variant="outline" size="sm" onClick={onExportPDF} className="flex items-center">
+          <DocumentIcon className="h-4 w-4 mr-2" />
+          PDF
+        </Button>
         <div className="relative">
           <Button
             variant="outline"

@@ -32,6 +32,7 @@ import WorkTaskForm from './pages/worktasks/WorkTaskForm.jsx'
 import WorkTaskDetailPage from './pages/worktasks/WorkTaskDetailPage.jsx'
 import InvoiceListPage from './pages/invoices/InvoiceListPage.jsx'
 import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage.jsx'
+import SubcontractorListPage from './pages/subcontractors/SubcontractorListPage.jsx'
 
 function App() {
   return (
@@ -258,7 +259,15 @@ function App() {
                     path="subcontractors"
                     element={
                       <RoleRoute minRole="owner">
-                        <div>Subcontractors</div>
+                        <SubcontractorListPage />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="subcontractors/:business_key"
+                    element={
+                      <RoleRoute minRole="owner">
+                        <div>Subcontractor Detail</div>
                       </RoleRoute>
                     }
                   />

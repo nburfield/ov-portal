@@ -10,6 +10,7 @@ import AdminRoute from './components/layout/AdminRoute.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
 import NotFound from './components/layout/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import LoginPage from './pages/auth/LoginPage.jsx'
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
                   path="/login"
                   element={
                     <PublicRoute>
-                      <div>Login Page</div>
+                      <LoginPage />
                     </PublicRoute>
                   }
                 />

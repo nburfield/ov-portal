@@ -18,6 +18,8 @@ import UserListPage from './pages/users/UserListPage.jsx'
 import UserDetailPage from './pages/users/UserDetailPage.jsx'
 import AdminBusinessListPage from './pages/admin/AdminBusinessListPage.jsx'
 import AdminBusinessDetailPage from './pages/admin/AdminBusinessDetailPage.jsx'
+import AdminUserListPage from './pages/admin/AdminUserListPage.jsx'
+import AdminUserDetailPage from './pages/admin/AdminUserDetailPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
 import ServiceListPage from './pages/services/ServiceListPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
@@ -308,7 +310,7 @@ function App() {
                     path="admin/users"
                     element={
                       <AdminRoute>
-                        <div>Admin Users</div>
+                        <AdminUserListPage />
                       </AdminRoute>
                     }
                   />
@@ -316,7 +318,7 @@ function App() {
                     path="admin/users/:key"
                     element={
                       <AdminRoute>
-                        <div>Admin User Detail</div>
+                        <AdminUserDetailPage />
                       </AdminRoute>
                     }
                   />

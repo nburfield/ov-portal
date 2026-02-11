@@ -14,6 +14,7 @@ import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import DashboardPage from './pages/dashboard/DashboardPage.jsx'
 import BusinessPage from './pages/business/BusinessPage.jsx'
+import UserListPage from './pages/users/UserListPage.jsx'
 
 function App() {
   return (
@@ -72,7 +73,7 @@ function App() {
                     path="users"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>Users</div>
+                        <UserListPage />
                       </RoleRoute>
                     }
                   />

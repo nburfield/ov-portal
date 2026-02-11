@@ -23,3 +23,43 @@ export const update = async (key, data) => {
 export const remove = async (key) => {
   await api.delete(`/api/v2/customers/${key}`)
 }
+
+// Contacts
+export const getContacts = async (customerKey) => {
+  const response = await api.get(`/api/v2/customers/${customerKey}/contacts`)
+  return response.data
+}
+
+export const createContact = async (customerKey, data) => {
+  const response = await api.post(`/api/v2/customers/${customerKey}/contacts`, data)
+  return response.data
+}
+
+// Contracts
+export const getContracts = async (customerKey) => {
+  const response = await api.get(`/api/v2/customers/${customerKey}/contracts`)
+  return response.data
+}
+
+export const createContract = async (customerKey, data) => {
+  const response = await api.post(`/api/v2/customers/${customerKey}/contracts`, data)
+  return response.data
+}
+
+export const uploadContract = async (customerKey, contractKey, file) => {
+  const response = await api.get(`/api/v2/customers/${customerKey}/contracts/${contractKey}/upload`)
+  const { put_url } = response.data
+  // Upload to S3
+  await fetch(put_url, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  })
+}
+
+export const getContractUrl = async (customerKey, contractKey) => {
+  const response = await api.get(`/api/v2/customers/${customerKey}/contracts/${contractKey}/url`)
+  return response.data.get_url
+}

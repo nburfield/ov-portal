@@ -27,7 +27,6 @@ export function BusinessProvider({ children }) {
     [state.businesses]
   )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const refreshBusinesses = useCallback(async () => {
     if (!isAuthenticated) {
       setState({
@@ -68,7 +67,6 @@ export function BusinessProvider({ children }) {
     return state.roles[state.activeBusiness.business_key] || []
   }, [state.activeBusiness, state.roles])
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     refreshBusinesses()
   }, [refreshBusinesses])

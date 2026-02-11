@@ -87,7 +87,7 @@ const DataTable = ({
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <ColumnHeader key={header.id} header={header} table={table} />
+                    <ColumnHeader key={header.id} column={header.column} />
                   ))}
                 </tr>
               ))}

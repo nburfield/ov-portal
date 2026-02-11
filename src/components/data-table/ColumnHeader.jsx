@@ -1,21 +1,19 @@
 import React from 'react'
-import { flexRender } from '@tanstack/react-table'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { cn } from '../../utils/cn'
 
-const ColumnHeader = ({ header }) => {
-  const { column } = header
-
+const ColumnHeader = ({ column }) => {
   const isSorted = column.getIsSorted()
   const canSort = column.getCanSort()
+
+  const header = typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id
 
   return (
     <th
       scope="col"
       className={cn(
         'group relative select-none bg-gray-50 dark:bg-gray-800 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider',
-        canSort && 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700',
-        column.getIsResizing() && 'bg-blue-50 dark:bg-blue-900/20'
+        canSort && 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
       )}
       onClick={canSort ? column.getToggleSortingHandler() : undefined}
       style={{
@@ -23,11 +21,7 @@ const ColumnHeader = ({ header }) => {
       }}
     >
       <div className="flex items-center justify-between">
-        <span className="truncate">
-          {header.isPlaceholder
-            ? null
-            : flexRender(header.column.columnDef.header, header.getContext())}
-        </span>
+        <span className="truncate">{header}</span>
         {canSort && (
           <div className="ml-2 flex flex-col">
             <ChevronUpIcon
@@ -45,16 +39,6 @@ const ColumnHeader = ({ header }) => {
           </div>
         )}
       </div>
-      {column.getCanResize() && (
-        <div
-          onMouseDown={header.getResizeHandler()}
-          onTouchStart={header.getResizeHandler()}
-          className={cn(
-            'absolute right-0 top-0 h-full w-1 cursor-col-resize bg-gray-300 dark:bg-gray-600 opacity-0 group-hover:opacity-100',
-            column.getIsResizing() && 'bg-blue-500 opacity-100'
-          )}
-        />
-      )}
     </th>
   )
 }

@@ -47,4 +47,20 @@ export const STATUS_COLORS = {
     bg: 'bg-red-100 dark:bg-red-900',
     text: 'text-red-800 dark:text-red-200',
   },
+  security: {
+    bg: 'bg-red-100 dark:bg-red-900',
+    text: 'text-red-800 dark:text-red-200',
+  },
+  billing: {
+    bg: 'bg-blue-100 dark:bg-blue-900',
+    text: 'text-blue-800 dark:text-blue-200',
+  },
+  access: {
+    bg: 'bg-yellow-100 dark:bg-yellow-900',
+    text: 'text-yellow-800 dark:text-yellow-200',
+  },
+  work_task: {
+    bg: 'bg-green-100 dark:bg-green-900',
+    text: 'text-green-800 dark:text-green-200',
+  },
 }

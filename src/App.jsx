@@ -33,6 +33,7 @@ import WorkTaskDetailPage from './pages/worktasks/WorkTaskDetailPage.jsx'
 import InvoiceListPage from './pages/invoices/InvoiceListPage.jsx'
 import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage.jsx'
 import SubcontractorListPage from './pages/subcontractors/SubcontractorListPage.jsx'
+import AuditLogPage from './pages/audit/AuditLogPage.jsx'
 
 function App() {
   return (
@@ -275,7 +276,7 @@ function App() {
                     path="audit"
                     element={
                       <RoleRoute minRole="owner">
-                        <div>Audit</div>
+                        <AuditLogPage />
                       </RoleRoute>
                     }
                   />

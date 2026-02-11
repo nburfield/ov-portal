@@ -151,8 +151,7 @@ export function AuthProvider({ children }) {
     }
   }, [logout, scheduleTokenRefresh])
 
-  const updateProfile = useCallback(async (data) => {
-    const updatedUser = await authService.updateProfile(data)
+  const updateProfile = useCallback(async (updatedUser) => {
     setState((prev) => ({
       ...prev,
       user: updatedUser,

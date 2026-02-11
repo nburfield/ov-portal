@@ -18,6 +18,7 @@ import UserListPage from './pages/users/UserListPage.jsx'
 import UserDetailPage from './pages/users/UserDetailPage.jsx'
 import RoleListPage from './pages/roles/RoleListPage.jsx'
 import ServiceListPage from './pages/services/ServiceListPage.jsx'
+import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
 
 function App() {
   return (
@@ -108,7 +109,7 @@ function App() {
                     path="services/:key"
                     element={
                       <RoleRoute minRole="manager">
-                        <div>Service Detail</div>
+                        <ServiceDetailPage />
                       </RoleRoute>
                     }
                   />

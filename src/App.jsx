@@ -11,6 +11,7 @@ import AppLayout from './components/layout/AppLayout.jsx'
 import NotFound from './components/layout/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
+import RegisterPage from './pages/auth/RegisterPage.jsx'
 
 function App() {
   return (
@@ -34,7 +35,7 @@ function App() {
                   path="/register"
                   element={
                     <PublicRoute>
-                      <div>Register Page</div>
+                      <RegisterPage />
                     </PublicRoute>
                   }
                 />

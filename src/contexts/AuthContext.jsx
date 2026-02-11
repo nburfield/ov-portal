@@ -53,6 +53,39 @@ export function AuthProvider({ children }) {
     [clearRefreshTimeout]
   )
 
+  const register = useCallback(
+    async (userData) => {
+      try {
+        setState((prev) => ({ ...prev, isLoading: true }))
+        await authService.register(userData)
+
+        // After successful registration, automatically log in
+        const response = await authService.login({
+          user_name: userData.user_name,
+          password: userData.password,
+        })
+
+        const { token, user } = response
+        const userRoles = await authService.getUserRoles()
+
+        setState({
+          token,
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+          userRoles,
+        })
+
+        scheduleTokenRefresh(token)
+        navigate(ROUTES.DASHBOARD)
+      } catch (error) {
+        setState((prev) => ({ ...prev, isLoading: false }))
+        throw error
+      }
+    },
+    [navigate, scheduleTokenRefresh]
+  )
+
   const login = useCallback(
     async (credentials) => {
       try {
@@ -144,6 +177,7 @@ export function AuthProvider({ children }) {
   const value = {
     ...state,
     login,
+    register,
     logout,
     refresh,
     updateProfile,

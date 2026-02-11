@@ -26,3 +26,8 @@ export async function logout() {
   const response = await api.post('/api/v2/auth/logout')
   return response.data
 }
+
+export async function getUserRoles() {
+  const response = await api.get('/api/v2/auth/roles')
+  return response.data
+}

@@ -19,6 +19,7 @@ const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const {
     register,
@@ -58,17 +59,14 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setIsLoading(true)
     setError('')
+    setFieldErrors({})
     try {
       await registerUser(data)
-      // Redirect is handled by AuthContext
     } catch (err) {
-      // Handle field-level errors from API
-      if (err.response?.data?.errors) {
-        // Set specific field errors
-        const apiErrors = err.response.data.errors
-        Object.keys(apiErrors).forEach((field) => {
-          setError((prev) => ({ ...prev, [field]: apiErrors[field] }))
-        })
+      if (err.response?.status === 400 && err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else if (err.response?.data?.errors) {
+        setFieldErrors(err.response.data.errors)
       } else {
         setError(err.response?.data?.message || 'Registration failed. Please try again.')
       }
@@ -113,9 +111,9 @@ const RegisterPage = () => {
                 }`}
                 placeholder="Enter your username"
               />
-              {(errors.user_name || error.user_name) && (
+              {(errors.user_name || fieldErrors.user_name) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.user_name?.message || error.user_name}
+                  {errors.user_name?.message || fieldErrors.user_name}
                 </p>
               )}
             </div>
@@ -141,9 +139,9 @@ const RegisterPage = () => {
                 }`}
                 placeholder="Enter your first name"
               />
-              {(errors.first_name || error.first_name) && (
+              {(errors.first_name || fieldErrors.first_name) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.first_name?.message || error.first_name}
+                  {errors.first_name?.message || fieldErrors.first_name}
                 </p>
               )}
             </div>
@@ -169,9 +167,9 @@ const RegisterPage = () => {
                 }`}
                 placeholder="Enter your last name"
               />
-              {(errors.last_name || error.last_name) && (
+              {(errors.last_name || fieldErrors.last_name) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.last_name?.message || error.last_name}
+                  {errors.last_name?.message || fieldErrors.last_name}
                 </p>
               )}
             </div>
@@ -197,9 +195,9 @@ const RegisterPage = () => {
                 }`}
                 placeholder="Enter your email"
               />
-              {(errors.email || error.email) && (
+              {(errors.email || fieldErrors.email) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.email?.message || error.email}
+                  {errors.email?.message || fieldErrors.email}
                 </p>
               )}
             </div>
@@ -225,9 +223,9 @@ const RegisterPage = () => {
                 }`}
                 placeholder="Enter your phone number"
               />
-              {(errors.phone || error.phone) && (
+              {(errors.phone || fieldErrors.phone) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.phone?.message || error.phone}
+                  {errors.phone?.message || fieldErrors.phone}
                 </p>
               )}
             </div>
@@ -266,9 +264,9 @@ const RegisterPage = () => {
                   )}
                 </button>
               </div>
-              {(errors.password || error.password) && (
+              {(errors.password || fieldErrors.password) && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.password?.message || error.password}
+                  {errors.password?.message || fieldErrors.password}
                 </p>
               )}
             </div>

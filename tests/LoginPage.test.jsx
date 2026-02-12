@@ -119,6 +119,30 @@ describe('LoginPage', () => {
     })
   })
 
+  it('displays generic error message on 401 status code', async () => {
+    const mockLogin = vi.fn().mockRejectedValue({
+      response: { status: 401, data: { message: 'Unauthorized' } },
+    })
+    const authService = await import('../src/services/auth.service')
+    authService.default.login = mockLogin
+
+    renderLoginPage()
+
+    fireEvent.change(screen.getByLabelText('Username *'), {
+      target: { value: 'testuser' },
+    })
+    fireEvent.change(screen.getByLabelText('Password *'), {
+      target: { value: 'wrongpassword' },
+    })
+
+    const submitButton = screen.getByRole('button', { name: 'Sign in' })
+    fireEvent.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Login failed. Please check your credentials.')).toBeInTheDocument()
+    })
+  })
+
   it('forgot password button shows placeholder', () => {
     renderLoginPage()
 

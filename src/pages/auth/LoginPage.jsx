@@ -31,7 +31,11 @@ const LoginPage = () => {
       await login(data)
       // Redirect is handled by AuthContext
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
+      if (err.response?.status === 401) {
+        setError('Login failed. Please check your credentials.')
+      } else {
+        setError(err.response?.data?.message || 'An error occurred. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }

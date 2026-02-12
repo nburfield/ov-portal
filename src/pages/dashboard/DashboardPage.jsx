@@ -7,24 +7,27 @@ import {
   CurrencyDollarIcon,
   UserIcon,
   CheckCircleIcon,
+  ArrowRightIcon,
+  BellIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline'
 import StatCard from '../../components/charts/StatCard'
 import AreaChart from '../../components/charts/AreaChart'
 import DonutChart from '../../components/charts/DonutChart'
 import DataTable from '../../components/data-table/DataTable'
-import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import Card, { CardBody } from '../../components/ui/Card'
+import PageHeader from '../../components/layout/PageHeader'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { invoiceService } from '../../services/invoice.service'
 import { workorderService } from '../../services/workorder.service'
 import { worktaskService } from '../../services/worktask.service'
 import { customerService } from '../../services/customer.service'
+import ROUTES from '../../constants/routes'
 
 const DashboardPage = () => {
   const navigate = useNavigate()
-
-  // Date calculations
   const now = new Date()
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
@@ -35,7 +38,6 @@ const DashboardPage = () => {
   const prevMonthStart = new Date(prevYear, prevMonth, 1)
   const prevMonthEnd = new Date(prevYear, prevMonth + 1, 0)
 
-  // Week calculations (Monday to Sunday)
   const getWeekStart = (date) => {
     const d = new Date(date)
     const day = d.getDay()
@@ -52,7 +54,6 @@ const DashboardPage = () => {
 
   const formatDate = (date) => date.toISOString().split('T')[0]
 
-  // Data fetching
   const { data: activeWorkOrders, isLoading: loadingActive } = useApiQuery(
     workorderService.getAll,
     { status: 'active' }
@@ -97,7 +98,6 @@ const DashboardPage = () => {
   const prevRevenue = prevPaidInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
   const revenueTrend = prevRevenue ? ((revenue - prevRevenue) / prevRevenue) * 100 : 0
 
-  // Revenue AreaChart data
   const yearAgo = new Date(now)
   yearAgo.setFullYear(yearAgo.getFullYear() - 1)
   const { data: revenueDataRaw } = useApiQuery(invoiceService.getAll, {
@@ -116,7 +116,6 @@ const DashboardPage = () => {
     return Object.entries(monthly).map(([month, rev]) => ({ month, revenue: rev }))
   }, [revenueDataRaw])
 
-  // Task Status DonutChart data
   const { data: tasksThisMonth } = useApiQuery(worktaskService.getAll, {
     completed_at__gte: formatDate(monthStart),
     completed_at__lte: formatDate(monthEnd),
@@ -127,28 +126,23 @@ const DashboardPage = () => {
     tasksThisMonth.forEach((task) => {
       statusCount[task.status] = (statusCount[task.status] || 0) + 1
     })
-    const colors = { completed: '#10b981', missed: '#ef4444', cancelled: '#f59e0b' }
     return Object.entries(statusCount).map(([status, count]) => ({
       name: status,
       value: count,
-      color: colors[status] || '#6b7280',
     }))
   }, [tasksThisMonth])
 
-  // Upcoming Work Orders
   const { data: upcomingWorkOrders } = useApiQuery(workorderService.getAll, {
     sort: 'next_scheduled_date',
     limit: 10,
   })
 
-  // Overdue Invoices
   const today = formatDate(now)
   const { data: overdueInvoices } = useApiQuery(invoiceService.getAll, {
     status: 'finalized',
     period_end__lt: today,
   })
 
-  // Activity Feed
   const { data: recentTasks } = useApiQuery(worktaskService.getAll, {
     sort: '-completed_at',
     limit: 5,
@@ -161,6 +155,7 @@ const DashboardPage = () => {
     sort: '-created_at',
     limit: 5,
   })
+
   const activityFeed = useMemo(() => {
     const activities = []
     recentTasks?.forEach((task) =>
@@ -190,35 +185,51 @@ const DashboardPage = () => {
         color: 'accent',
       })
     )
-    return activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 15)
+    return activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10)
   }, [recentTasks, recentInvoices, recentCustomers])
 
   const isLoading = loadingActive || loadingTasks || loadingInvoices || loadingRevenue
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <div key={i} className="surface p-6">
+              <div className="flex items-center gap-4">
+                <div className="skeleton h-12 w-12 rounded-xl" />
+                <div className="space-y-2 flex-1">
+                  <div className="skeleton h-4 w-20" />
+                  <div className="skeleton h-6 w-32" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Skeleton className="h-64 lg:col-span-2" />
-          <Skeleton className="h-64" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 surface p-6">
+            <div className="skeleton h-64" />
+          </div>
+          <div className="surface p-6">
+            <div className="skeleton h-64" />
+          </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-        <Skeleton className="h-64" />
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Row 1: StatCards */}
+    <div className="space-y-6">
+      <PageHeader
+        title="Dashboard"
+        subtitle={`Welcome back! Here's what's happening today.`}
+        actions={
+          <Button variant="primary" onClick={() => navigate(ROUTES.WORK_ORDERS)}>
+            New Work Order
+          </Button>
+        }
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={ClipboardDocumentListIcon}
@@ -231,6 +242,7 @@ const DashboardPage = () => {
           label="Tasks This Week"
           value={taskCount}
           trend={{ isPositive: taskTrend >= 0, value: Math.abs(taskTrend).toFixed(1) }}
+          trendLabel="vs last week"
           color="success"
         />
         <StatCard
@@ -238,6 +250,7 @@ const DashboardPage = () => {
           label="Open Invoices"
           value={openCount}
           trend={{ isPositive: openTrend >= 0, value: Math.abs(openTrend).toFixed(1) }}
+          trendLabel="vs last month"
           color="warning"
         />
         <StatCard
@@ -245,96 +258,161 @@ const DashboardPage = () => {
           label="Revenue This Month"
           value={`$${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           trend={{ isPositive: revenueTrend >= 0, value: Math.abs(revenueTrend).toFixed(1) }}
+          trendLabel="vs last month"
           color="success"
         />
       </div>
 
-      {/* Row 2: Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <AreaChart data={revenueData} title="Revenue Over the Last Year" />
-        </div>
-        <div>
-          <DonutChart
-            data={taskStatusData}
-            title="Task Status This Month"
-            centerLabel={`${tasksThisMonth?.length || 0} Tasks`}
-          />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div>
+              <h3 className="font-semibold text-text-primary">Revenue Overview</h3>
+              <p className="text-sm text-text-tertiary">Last 12 months</p>
+            </div>
+          </div>
+          <CardBody>
+            <AreaChart data={revenueData} title="Revenue" />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <div className="px-6 py-4 border-b border-border">
+            <h3 className="font-semibold text-text-primary">Task Status</h3>
+            <p className="text-sm text-text-tertiary">This month</p>
+          </div>
+          <CardBody>
+            <DonutChart
+              data={taskStatusData}
+              centerLabel={`${tasksThisMonth?.length || 0} Tasks`}
+            />
+          </CardBody>
+        </Card>
       </div>
 
-      {/* Row 3: Upcoming and Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Upcoming Work Orders</h3>
-          <DataTable
-            data={upcomingWorkOrders || []}
-            columns={[
-              { key: 'customer_name', label: 'Customer' },
-              { key: 'service_name', label: 'Service' },
-              {
-                key: 'next_scheduled_date',
-                label: 'Next Date',
-                render: (row) => new Date(row.next_scheduled_date).toLocaleDateString(),
-              },
-              { key: 'assigned_to', label: 'Assigned To' },
-              { key: 'status', label: 'Status', render: (row) => <Badge>{row.status}</Badge> },
-            ]}
-            onRowClick={(row) => navigate(`/workorders/${row.key}`)}
-          />
-          <Button onClick={() => navigate('/workorders')} className="mt-4">
-            View all work orders →
-          </Button>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Recent Activity Feed</h3>
-          <div className="space-y-3">
-            {activityFeed.map((activity, i) => (
-              <div key={i} className="flex items-start space-x-3 p-2 rounded-lg bg-gray-50">
-                <activity.icon className={`w-5 h-5 text-${activity.color}-500`} />
-                <div className="flex-1">
-                  <p className="text-sm">{activity.description}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(activity.timestamp).toLocaleString()}
-                  </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div>
+              <h3 className="font-semibold text-text-primary">Upcoming Work Orders</h3>
+              <p className="text-sm text-text-tertiary">Next scheduled work orders</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.WORK_ORDERS)}>
+              View All
+              <ArrowRightIcon className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          <CardBody className="p-0">
+            <DataTable
+              data={upcomingWorkOrders || []}
+              columns={[
+                { key: 'customer_name', label: 'Customer' },
+                { key: 'service_name', label: 'Service' },
+                {
+                  key: 'next_scheduled_date',
+                  label: 'Next Date',
+                  render: (row) => new Date(row.next_scheduled_date).toLocaleDateString(),
+                },
+                {
+                  key: 'status',
+                  label: 'Status',
+                  render: (row) => <Badge>{row.status}</Badge>,
+                },
+              ]}
+              onRowClick={(row) => navigate(`/workorders/${row.key}`)}
+              variant="plain"
+              enableSelection={false}
+            />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div>
+              <h3 className="font-semibold text-text-primary">Recent Activity</h3>
+              <p className="text-sm text-text-tertiary">Latest updates from your system</p>
+            </div>
+          </div>
+          <CardBody>
+            <div className="space-y-4">
+              {activityFeed.map((activity, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div
+                    className={`p-2 rounded-lg bg-${activity.color}-light dark:bg-${activity.color}-muted`}
+                  >
+                    <activity.icon className={`h-4 w-4 text-${activity.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-text-primary">{activity.description}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ClockIcon className="h-3 w-3 text-text-muted" />
+                      <p className="text-xs text-text-tertiary">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+              {activityFeed.length === 0 && (
+                <div className="text-center py-8 text-text-tertiary">No recent activity</div>
+              )}
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
-      {/* Row 4: Overdue Invoices */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Overdue Invoices</h3>
-        {overdueInvoices?.length ? (
-          <DataTable
-            data={overdueInvoices}
-            columns={[
-              { key: 'key', label: 'Invoice Key' },
-              { key: 'customer_name', label: 'Customer' },
-              { key: 'total', label: 'Total', render: (row) => `$${row.total.toFixed(2)}` },
-              {
-                key: 'period_end',
-                label: 'Period End',
-                render: (row) => new Date(row.period_end).toLocaleDateString(),
-              },
-              {
-                key: 'days_overdue',
-                label: 'Days Overdue',
-                render: (row) =>
-                  Math.floor((now - new Date(row.period_end)) / (1000 * 60 * 60 * 24)),
-              },
-            ]}
-            onRowClick={(row) => navigate(`/invoices/${row.key}`)}
-          />
-        ) : (
-          <div className="text-center py-8">
-            <CheckCircleIcon className="w-12 h-12 text-green-500 mx-auto mb-2" />
-            <p className="text-gray-500">No overdue invoices</p>
+      {overdueInvoices?.length > 0 && (
+        <Card variant="elevated" className="border-warning/50">
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-warning-light/30 dark:bg-warning-muted/20">
+            <BellIcon className="h-5 w-5 text-warning" />
+            <div>
+              <h3 className="font-semibold text-warning">Attention Required</h3>
+              <p className="text-sm text-text-secondary">
+                You have {overdueInvoices.length} overdue invoices
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="ml-auto"
+              onClick={() => navigate(ROUTES.INVOICES)}
+            >
+              View Invoices
+            </Button>
           </div>
-        )}
-      </div>
+          <CardBody className="p-0">
+            <DataTable
+              data={overdueInvoices}
+              columns={[
+                { key: 'key', label: 'Invoice Key' },
+                { key: 'customer_name', label: 'Customer' },
+                {
+                  key: 'total',
+                  label: 'Total',
+                  render: (row) => `$${row.total.toFixed(2)}`,
+                },
+                {
+                  key: 'period_end',
+                  label: 'Due Date',
+                  render: (row) => new Date(row.period_end).toLocaleDateString(),
+                },
+                {
+                  key: 'days_overdue',
+                  label: 'Days Overdue',
+                  render: (row) => (
+                    <Badge variant="danger">
+                      {Math.floor((now - new Date(row.period_end)) / (1000 * 60 * 60 * 24))} days
+                    </Badge>
+                  ),
+                },
+              ]}
+              onRowClick={(row) => navigate(`/invoices/${row.key}`)}
+              variant="plain"
+              enableSelection={false}
+            />
+          </CardBody>
+        </Card>
+      )}
     </div>
   )
 }

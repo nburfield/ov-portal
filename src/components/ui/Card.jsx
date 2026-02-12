@@ -1,14 +1,41 @@
-function Card({ title, children, className }) {
+import React from 'react'
+import { cn } from '../../utils/cn'
+
+const Card = ({ title, description, children, className, headerAction, variant = 'default' }) => {
+  const variants = {
+    default: 'bg-bg-card border border-border rounded-xl shadow-sm',
+    elevated: 'bg-bg-card border border-border rounded-xl shadow-lg',
+    outline: 'bg-transparent border-2 border-border rounded-xl',
+    glass: 'bg-bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl shadow-sm',
+  }
+
   return (
-    <div
-      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 ${className || ''}`}
-    >
-      {title && (
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{title}</h3>
+    <div className={cn(variants[variant], className)}>
+      {(title || description || headerAction) && (
+        <div className="flex items-start justify-between px-6 py-4 border-b border-border">
+          <div>
+            {title && <h3 className="text-lg font-semibold text-text-primary">{title}</h3>}
+            {description && <p className="text-sm text-text-tertiary mt-1">{description}</p>}
+          </div>
+          {headerAction && <div className="flex items-center gap-2">{headerAction}</div>}
+        </div>
       )}
-      {children}
+      <div className="p-6">{children}</div>
     </div>
   )
 }
 
+const CardHeader = ({ children, className }) => (
+  <div className={cn('px-6 py-4 border-b border-border', className)}>{children}</div>
+)
+
+const CardBody = ({ children, className }) => <div className={cn('p-6', className)}>{children}</div>
+
+const CardFooter = ({ children, className }) => (
+  <div className={cn('px-6 py-4 border-t border-border bg-bg-secondary/50', className)}>
+    {children}
+  </div>
+)
+
+export { Card, CardHeader, CardBody, CardFooter }
 export default Card

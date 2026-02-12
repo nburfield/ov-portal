@@ -8,21 +8,41 @@ const EmptyState = ({
   description,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
   className,
-  ...props
+  size = 'md',
 }) => {
+  const sizes = {
+    sm: { icon: 'h-10 w-10', title: 'text-base', desc: 'text-sm' },
+    md: { icon: 'h-14 w-14', title: 'text-lg', desc: 'text-sm' },
+    lg: { icon: 'h-20 w-20', title: 'text-xl', desc: 'text-base' },
+  }
+
   return (
-    <div
-      className={cn('flex flex-col items-center justify-center p-8 text-center', className)}
-      {...props}
-    >
-      {Icon && <Icon className="h-12 w-12 text-gray-400 mb-4" />}
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md">{description}</p>
-      {actionLabel && onAction && (
-        <Button variant="primary" onClick={onAction}>
-          {actionLabel}
-        </Button>
+    <div className={cn('empty-state py-12', className)}>
+      {Icon && (
+        <div className={cn('empty-state-icon', sizes[size].icon)}>
+          <Icon className="w-full h-full" />
+        </div>
+      )}
+      <h3 className={cn('empty-state-title', sizes[size].title)}>{title}</h3>
+      {description && (
+        <p className={cn('empty-state-description', sizes[size].desc)}>{description}</p>
+      )}
+      {(actionLabel || secondaryActionLabel) && (
+        <div className="flex items-center gap-3 mt-6">
+          {actionLabel && onAction && (
+            <Button variant="primary" onClick={onAction}>
+              {actionLabel}
+            </Button>
+          )}
+          {secondaryActionLabel && onSecondaryAction && (
+            <Button variant="secondary" onClick={onSecondaryAction}>
+              {secondaryActionLabel}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   )

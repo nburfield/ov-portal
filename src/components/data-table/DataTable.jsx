@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { flexRender } from '@tanstack/react-table'
 import { cn } from '../../utils/cn'
 import { useDataTable } from '../../hooks/useDataTable'
@@ -9,6 +9,7 @@ import BulkActions from './BulkActions'
 import ExportButton from './ExportButton'
 import Skeleton from '../ui/Skeleton'
 import EmptyState from '../ui/EmptyState'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 const DataTable = ({
   columns,
@@ -26,7 +27,11 @@ const DataTable = ({
   onExportPDF,
   bulkActions,
   onSelectionChange,
+  variant = 'default',
+  className,
 }) => {
+  const [globalFilter, setGlobalFilter] = useState(initialGlobalFilter)
+
   const selectColumn = enableSelection
     ? {
         id: 'select',
@@ -35,7 +40,7 @@ const DataTable = ({
             type="checkbox"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
-            className="rounded border-gray-300 dark:border-gray-600"
+            className="rounded border-border bg-bg-card text-accent focus:ring-accent/20"
             aria-label="Select all rows"
           />
         ),
@@ -44,11 +49,11 @@ const DataTable = ({
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
-            className="rounded border-gray-300 dark:border-gray-600"
+            className="rounded border-border bg-bg-card text-accent focus:ring-accent/20"
             aria-label={`Select row ${row.index + 1}`}
           />
         ),
-        size: 50,
+        size: 48,
         enableSorting: false,
         enableResizing: false,
       }
@@ -63,16 +68,14 @@ const DataTable = ({
     initialPagination,
     initialColumnVisibility,
     initialColumnFilters,
-    initialGlobalFilter,
+    initialGlobalFilter: globalFilter,
     enableSelection,
   })
 
   const { rows } = table.getRowModel()
-
   const selectedCount = table.getSelectedRowModel().rows.length
   const totalCount = table.getFilteredRowModel().rows.length
 
-  // Notify parent of selection changes
   useEffect(() => {
     if (onSelectionChange) {
       const selectedRows = table.getSelectedRowModel().rows
@@ -80,8 +83,20 @@ const DataTable = ({
     }
   }, [table, onSelectionChange])
 
+  const variants = {
+    default: 'bg-bg-card border border-border rounded-xl shadow-sm',
+    plain: '',
+    bordered: 'border border-border rounded-xl',
+  }
+
+  const defaultEmptyState = {
+    icon: MagnifyingGlassIcon,
+    title: 'No data found',
+    description: 'Try adjusting your search or filter criteria',
+  }
+
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+    <div className={cn('space-y-4', className)}>
       {selectedCount > 0 && (
         <BulkActions
           selectedCount={selectedCount}
@@ -93,62 +108,75 @@ const DataTable = ({
           <ExportButton onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
         </BulkActions>
       )}
-      <TableToolbar
-        table={table}
-        globalFilter={table.getState().globalFilter}
-        setGlobalFilter={table.setGlobalFilter}
-        onExportCSV={onExportCSV}
-        onExportPDF={onExportPDF}
-      />
-      {isLoading ? (
-        <div className="p-4">
-          <Skeleton variant="SkeletonRow" count={table.getState().pagination.pageSize} />
-        </div>
-      ) : rows.length === 0 ? (
-        <EmptyState {...emptyState} />
-      ) : (
-        <div className="overflow-auto">
-          <table
-            role="table"
-            className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
-            aria-label="Data table"
-          >
-            <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <ColumnHeader key={header.id} column={header.column} />
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {rows.map((row) => (
-                <tr
-                  key={row.id}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={cn(
-                    'hover:bg-gray-50 dark:hover:bg-gray-800',
-                    onRowClick && 'cursor-pointer'
-                  )}
-                  role="row"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
-                      role="gridcell"
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {!isLoading && rows.length > 0 && <TablePagination table={table} />}
+
+      <div className={cn('overflow-hidden', variants[variant])}>
+        <TableToolbar
+          table={table}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          onExportCSV={onExportCSV}
+          onExportPDF={onExportPDF}
+        />
+
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: table.getState().pagination.pageSize }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <EmptyState {...defaultEmptyState} {...emptyState} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table role="table" className="w-full" aria-label="Data table">
+              <thead className="bg-bg-secondary/50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <ColumnHeader key={header.id} column={header.column} />
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.map((row, index) => (
+                  <tr
+                    key={row.id}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={cn(
+                      'transition-colors',
+                      onRowClick && 'cursor-pointer',
+                      row.getIsSelected() && 'bg-accent-light/30 dark:bg-accent-muted/30',
+                      !row.getIsSelected() && index % 2 === 0 && 'bg-bg-card',
+                      !row.getIsSelected() && index % 2 !== 0 && 'bg-bg-secondary/30',
+                      'hover:bg-bg-hover/50'
+                    )}
+                    role="row"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3.5 text-sm text-text-secondary"
+                        role="gridcell"
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!isLoading && rows.length > 0 && <TablePagination table={table} />}
+      </div>
     </div>
   )
 }

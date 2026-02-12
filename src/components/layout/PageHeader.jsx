@@ -1,13 +1,25 @@
 import React from 'react'
+import { cn } from '../../utils/cn'
 
-const PageHeader = ({ title, subtitle, children }) => {
+const PageHeader = ({ title, subtitle, description, children, actions, className }) => {
   return (
-    <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+    <div className={cn('page-header', className)}>
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>}
+        {title && <h1 className="page-title">{title}</h1>}
+        {(subtitle || description) && (
+          <p className="page-subtitle">
+            {subtitle}
+            {description && <span className="mx-2 text-text-muted">·</span>}
+            {description}
+          </p>
+        )}
       </div>
-      {children && <div className="flex items-center space-x-2">{children}</div>}
+      {(children || actions) && (
+        <div className="flex items-center gap-3">
+          {children}
+          {actions}
+        </div>
+      )}
     </div>
   )
 }

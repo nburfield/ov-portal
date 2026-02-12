@@ -1,41 +1,38 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useState, useCallback } from 'react'
 
-const ThemeContext = createContext()
+const ThemeContext = createContext(null)
 
-export function ThemeProvider({ children }) {
+export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light'
     const stored = localStorage.getItem('theme')
-    if (stored) {
-      return stored
-    }
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    return prefersDark ? 'dark' : 'light'
+    if (stored) return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
+
   const isDark = theme === 'dark'
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    const root = document.documentElement
+    root.classList.remove('light', 'dark')
+    root.classList.add(theme)
     localStorage.setItem('theme', theme)
-  }, [theme, isDark])
+  }, [theme])
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+  }, [])
+
+  const setLightTheme = useCallback(() => setTheme('light'), [])
+  const setDarkTheme = useCallback(() => setTheme('dark'), [])
+
+  const value = {
+    theme,
+    isDark,
+    toggleTheme,
+    setLightTheme,
+    setDarkTheme,
   }
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>{children}</ThemeContext.Provider>
-  )
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
-  return context
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

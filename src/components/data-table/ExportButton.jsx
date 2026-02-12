@@ -1,51 +1,60 @@
-import React, { useState } from 'react'
-import { ChevronDownIcon, DocumentTextIcon, DocumentIcon } from '@heroicons/react/24/outline'
+import React, { useState, useRef, useEffect } from 'react'
+import { ChevronDownIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
 import Button from '../ui/Button'
+import { cn } from '../../utils/cn'
 
 const ExportButton = ({ onExportCSV, onExportPDF, className }) => {
   const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef(null)
 
-  const handleToggle = () => setShowDropdown(!showDropdown)
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleExportCSV = () => {
     setShowDropdown(false)
-    onExportCSV()
+    onExportCSV?.()
   }
 
   const handleExportPDF = () => {
     setShowDropdown(false)
-    onExportPDF()
+    onExportPDF?.()
   }
 
   return (
-    <div className="relative">
+    <div ref={dropdownRef} className="relative">
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
-        onClick={handleToggle}
-        className={`flex items-center ${className}`}
+        onClick={() => setShowDropdown(!showDropdown)}
+        className={cn('flex items-center gap-2', className)}
       >
+        <DocumentArrowDownIcon className="h-4 w-4" />
         Export
-        <ChevronDownIcon className="ml-2 h-4 w-4" />
+        <ChevronDownIcon
+          className={cn('h-4 w-4 transition-transform', showDropdown && 'rotate-180')}
+        />
       </Button>
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10">
-          <div className="py-1">
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <DocumentTextIcon className="mr-2 h-4 w-4" />
-              CSV
+        <div className="dropdown-menu right-0 w-40 py-1 animate-scale-in">
+          {onExportCSV && (
+            <button onClick={handleExportCSV} className="dropdown-item w-full">
+              <DocumentArrowDownIcon className="h-4 w-4" />
+              Export CSV
             </button>
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <DocumentIcon className="mr-2 h-4 w-4" />
-              PDF
+          )}
+          {onExportPDF && (
+            <button onClick={handleExportPDF} className="dropdown-item w-full">
+              <DocumentArrowDownIcon className="h-4 w-4" />
+              Export PDF
             </button>
-          </div>
+          )}
         </div>
       )}
     </div>

@@ -1,32 +1,46 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '../../utils/cn'
+import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 
-const Select = ({ label, options, error, required, placeholder, className, ...props }) => {
-  return (
-    <div className="space-y-1">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
-      <select
-        className={cn(
-          'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white',
-          error && 'border-red-500 focus:ring-red-500 focus:border-red-500',
-          className
+const Select = forwardRef(
+  ({ label, error, helper, required, placeholder, options = [], className, ...props }, ref) => {
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label className="block text-sm font-medium text-text-secondary">
+            {label}
+            {required && <span className="text-danger ml-1">*</span>}
+          </label>
         )}
-        {...props}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-    </div>
-  )
-}
+        <div className="relative">
+          <select
+            ref={ref}
+            className={cn(
+              'input-base appearance-none pr-10',
+              'bg-bg-card',
+              error && 'border-danger focus:ring-danger/20 focus:border-danger',
+              className
+            )}
+            {...props}
+          >
+            {placeholder && <option value="">{placeholder}</option>}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+            <ChevronUpDownIcon className="h-5 w-5" />
+          </div>
+        </div>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        {helper && !error && <p className="text-sm text-text-tertiary">{helper}</p>}
+      </div>
+    )
+  }
+)
+
+Select.displayName = 'Select'
 
 export default Select

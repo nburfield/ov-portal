@@ -21,17 +21,21 @@ const TablePagination = ({ table }) => {
     pageNumbers.push(i)
   }
 
+  const showingStart = totalRows === 0 ? 0 : pageIndex * pageSize + 1
+  const showingEnd = Math.min((pageIndex + 1) * pageSize, totalRows)
+
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-700 dark:text-gray-300">
-          Showing {pageIndex * pageSize + 1} to {Math.min((pageIndex + 1) * pageSize, totalRows)} of{' '}
-          {totalRows}
+    <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-bg-secondary/50">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-text-secondary">
+          Showing <span className="font-medium">{showingStart}</span> to{' '}
+          <span className="font-medium">{showingEnd}</span> of{' '}
+          <span className="font-medium">{totalRows}</span> results
         </span>
       </div>
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">Rows per page:</span>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-text-secondary">Rows per page:</span>
           <Select
             value={pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
@@ -44,47 +48,53 @@ const TablePagination = ({ table }) => {
             className="w-20"
           />
         </div>
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center gap-1">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
+            className="p-2"
           >
             <ChevronDoubleLeftIcon className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="p-2"
           >
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
-          {pageNumbers.map((page) => (
-            <Button
-              key={page}
-              variant={page === pageIndex ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => table.setPageIndex(page)}
-              className="w-8 h-8 p-0"
-            >
-              {page + 1}
-            </Button>
-          ))}
+          <div className="flex items-center gap-1 mx-2">
+            {pageNumbers.map((page) => (
+              <Button
+                key={page}
+                variant={page === pageIndex ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => table.setPageIndex(page)}
+                className="w-8 h-8 p-0"
+              >
+                {page + 1}
+              </Button>
+            ))}
+          </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="p-2"
           >
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => table.setPageIndex(totalPages - 1)}
             disabled={!table.getCanNextPage()}
+            className="p-2"
           >
             <ChevronDoubleRightIcon className="h-4 w-4" />
           </Button>

@@ -1,66 +1,66 @@
 export const STATUS_COLORS = {
   active: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
+    bg: 'bg-success-light dark:bg-success-muted',
+    text: 'text-success dark:text-success-foreground',
   },
   inactive: {
-    bg: 'bg-gray-100 dark:bg-gray-800',
-    text: 'text-gray-600 dark:text-gray-300',
+    bg: 'bg-bg-tertiary dark:bg-bg-active',
+    text: 'text-text-secondary',
   },
   archived: {
-    bg: 'bg-gray-100 dark:bg-gray-800',
-    text: 'text-gray-600 dark:text-gray-300',
+    bg: 'bg-bg-tertiary dark:bg-bg-active',
+    text: 'text-text-secondary',
   },
   draft: {
-    bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-800 dark:text-blue-200',
+    bg: 'bg-bg-tertiary dark:bg-bg-active',
+    text: 'text-text-secondary',
   },
   paused: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900',
-    text: 'text-yellow-800 dark:text-yellow-200',
+    bg: 'bg-warning-light dark:bg-warning-muted',
+    text: 'text-warning dark:text-warning-foreground',
   },
   cancelled: {
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
+    bg: 'bg-danger-light dark:bg-danger-muted',
+    text: 'text-danger dark:text-danger-foreground',
   },
   completed: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
+    bg: 'bg-success-light dark:bg-success-muted',
+    text: 'text-success dark:text-success-foreground',
   },
   missed: {
-    bg: 'bg-orange-100 dark:bg-orange-900',
-    text: 'text-orange-800 dark:text-orange-200',
+    bg: 'bg-warning-light dark:bg-warning-muted',
+    text: 'text-warning dark:text-warning-foreground',
   },
   finalized: {
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-800 dark:text-purple-200',
+    bg: 'bg-info-light dark:bg-info-muted',
+    text: 'text-info dark:text-info-foreground',
   },
   paid: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
+    bg: 'bg-success-light dark:bg-success-muted',
+    text: 'text-success dark:text-success-foreground',
   },
   void: {
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
+    bg: 'bg-danger-light dark:bg-danger-muted',
+    text: 'text-danger dark:text-danger-foreground',
   },
   out_of_service: {
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
+    bg: 'bg-danger-light dark:bg-danger-muted',
+    text: 'text-danger dark:text-danger-foreground',
   },
   security: {
-    bg: 'bg-red-100 dark:bg-red-900',
-    text: 'text-red-800 dark:text-red-200',
+    bg: 'bg-danger-light dark:bg-danger-muted',
+    text: 'text-danger dark:text-danger-foreground',
   },
   billing: {
-    bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-800 dark:text-blue-200',
+    bg: 'bg-info-light dark:bg-info-muted',
+    text: 'text-info dark:text-info-foreground',
   },
   access: {
-    bg: 'bg-yellow-100 dark:bg-yellow-900',
-    text: 'text-yellow-800 dark:text-yellow-200',
+    bg: 'bg-warning-light dark:bg-warning-muted',
+    text: 'text-warning dark:text-warning-foreground',
   },
   work_task: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-800 dark:text-green-200',
+    bg: 'bg-success-light dark:bg-success-muted',
+    text: 'text-success dark:text-success-foreground',
   },
 }

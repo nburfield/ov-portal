@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -21,15 +21,17 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
+  HomeIcon,
 } from 'lucide-react'
 import { useBusiness } from '../../hooks/useBusiness'
 import { hasMinRole } from '../../constants/roles'
+import { cn } from '../../utils/cn'
 
 const navigationGroups = [
   {
     name: 'Main',
     items: [
-      { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard', minRole: 'manager' },
+      { icon: HomeIcon, label: 'Dashboard', href: '/dashboard', minRole: 'manager' },
       { icon: Building2, label: 'Business', href: '/business', minRole: 'owner' },
     ],
   },
@@ -87,6 +89,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
   const location = useLocation()
   const { getCurrentRoles } = useBusiness()
   const userRoles = getCurrentRoles()
+  const [expandedGroups, setExpandedGroups] = useState({})
 
   const isActive = (href) => {
     return location.pathname === href || location.pathname.startsWith(href + '/')
@@ -105,91 +108,131 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
     ? superAdminGroup.items.filter((item) => hasMinRole(userRoles, item.minRole))
     : []
 
+  const toggleGroup = (groupName) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !prev[groupName],
+    }))
+  }
+
+  const NavItem = ({ item }) => {
+    const active = isActive(item.href)
+    const hasChildren = item.children && item.children.length > 0
+    const isExpanded = expandedGroups[item.label]
+
+    return (
+      <div>
+        <Link
+          to={item.href}
+          className={cn('sidebar-item', active && 'sidebar-item-active')}
+          title={isCollapsed ? item.label : undefined}
+        >
+          <item.icon className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && (
+            <>
+              <span className="flex-1">{item.label}</span>
+              {hasChildren && (
+                <ChevronRightIcon
+                  className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')}
+                />
+              )}
+            </>
+          )}
+        </Link>
+        {!isCollapsed && hasChildren && isExpanded && (
+          <div className="ml-9 mt-1 space-y-0.5">
+            {item.children.map((child) => {
+              const childActive = isActive(child.href)
+              return (
+                <Link
+                  key={child.href}
+                  to={child.href}
+                  className={cn('sidebar-item py-2 text-sm', childActive && 'sidebar-item-active')}
+                >
+                  <span>{child.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const ChevronRightIcon = ({ className }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  )
+
   return (
     <aside
-      className={`bg-white border-r border-gray-200 transition-all duration-300 flex flex-col ${
+      className={cn(
+        'hidden lg:flex flex-col bg-bg-sidebar border-r border-border transition-all duration-300',
         isCollapsed ? 'w-16' : 'w-64'
-      }`}
+      )}
     >
-      <div className="flex-1 p-4">
-        <nav className="space-y-6">
-          {filteredGroups.map((group) => (
-            <div key={group.name}>
-              {!isCollapsed && (
-                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  {group.name}
-                </h3>
-              )}
-              <ul className="space-y-1">
-                {group.items.map((item) => {
-                  const active = isActive(item.href)
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        to={item.href}
-                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                          active
-                            ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <item.icon
-                          className={`h-5 w-5 flex-shrink-0 ${!isCollapsed ? 'mr-3' : ''}`}
-                        />
-                        {!isCollapsed && <span>{item.label}</span>}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
+      <div className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {filteredGroups.map((group) => (
+          <div key={group.name}>
+            {!isCollapsed && (
+              <button
+                onClick={() => toggleGroup(group.name)}
+                className="flex items-center w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                <span className="flex-1 text-left">{group.name}</span>
+              </button>
+            )}
+            <ul className={cn('space-y-0.5', !isCollapsed && 'mt-1')}>
+              {group.items.map((item) => (
+                <li key={item.href}>
+                  <NavItem item={item} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
 
-          {filteredSuperAdminItems.length > 0 && (
-            <div>
-              {!isCollapsed && (
-                <>
-                  <div className="border-t border-gray-200 my-4"></div>
-                  <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    {superAdminGroup.name}
-                  </h3>
-                </>
-              )}
-              <ul className="space-y-1">
-                {filteredSuperAdminItems.map((item) => {
-                  const active = isActive(item.href)
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        to={item.href}
-                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                          active
-                            ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <item.icon
-                          className={`h-5 w-5 flex-shrink-0 ${!isCollapsed ? 'mr-3' : ''}`}
-                        />
-                        {!isCollapsed && <span>{item.label}</span>}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-        </nav>
+        {filteredSuperAdminItems.length > 0 && (
+          <div className="pt-4 mt-4 border-t border-border">
+            {!isCollapsed && (
+              <div className="px-3 py-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+                  {superAdminGroup.name}
+                </p>
+              </div>
+            )}
+            <ul className={cn('space-y-0.5', !isCollapsed && 'mt-1')}>
+              {filteredSuperAdminItems.map((item) => {
+                const active = isActive(item.href)
+                return (
+                  <li key={item.href}>
+                    <Link
+                      to={item.href}
+                      className={cn('sidebar-item', active && 'sidebar-item-active')}
+                      title={isCollapsed ? item.label : undefined}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!isCollapsed && <span>{item.label}</span>}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
       </div>
 
-      {/* Collapse toggle at bottom */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 border-t border-border">
         <button
           onClick={onToggle}
+          className="sidebar-item w-full text-text-tertiary hover:text-text-primary"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex items-center justify-center w-full p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
         >
-          {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          <ChevronLeft
+            className={cn('h-5 w-5 transition-transform', isCollapsed && 'rotate-180')}
+          />
+          {!isCollapsed && <span className="text-sm">Collapse</span>}
         </button>
       </div>
     </aside>

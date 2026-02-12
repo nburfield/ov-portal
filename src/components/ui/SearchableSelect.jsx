@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { cn } from '../../utils/cn'
 import { useDebounce } from '../../hooks/useDebounce'
-import { ChevronDownIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const SearchableSelect = ({
   label,
@@ -12,6 +12,7 @@ const SearchableSelect = ({
   required,
   placeholder,
   className,
+  disabled = false,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -20,12 +21,11 @@ const SearchableSelect = ({
   const [isLoading, setIsLoading] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const [hasInteracted, setHasInteracted] = useState(false)
+
   const inputRef = useRef(null)
   const dropdownRef = useRef(null)
-
   const debouncedSearchTerm = useDebounce(inputValue, 300)
 
-  // Load options when search term changes
   const loadOptionsCallback = useCallback(
     async (searchTerm) => {
       if (!loadOptions) return
@@ -44,21 +44,18 @@ const SearchableSelect = ({
     [loadOptions]
   )
 
-  // Load options when user has interacted and search term changes (debounced)
   useEffect(() => {
-    if (hasInteracted && debouncedSearchTerm) {
+    if (hasInteracted && debouncedSearchTerm !== undefined) {
       loadOptionsCallback(debouncedSearchTerm)
     }
   }, [debouncedSearchTerm, loadOptionsCallback, hasInteracted])
 
-  // Load options when value is set but no options loaded yet
   useEffect(() => {
     if (value && options.length === 0 && loadOptions && !hasInteracted) {
       loadOptionsCallback('')
     }
   }, [value, options.length, loadOptions, hasInteracted, loadOptionsCallback])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -76,7 +73,6 @@ const SearchableSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Get the display label for the current value
   const getDisplayLabel = () => {
     if (!value) return inputValue
     const option = options.find((opt) => opt.value === value)
@@ -93,7 +89,6 @@ const SearchableSelect = ({
   const handleInputFocus = () => {
     setIsOpen(true)
     setHasInteracted(true)
-    // Load initial options if input is empty and hasn't been loaded yet
     if (!inputValue && loadOptions && options.length === 0) {
       loadOptionsCallback('')
     }
@@ -107,9 +102,17 @@ const SearchableSelect = ({
     inputRef.current?.blur()
   }
 
+  const handleClear = (e) => {
+    e.stopPropagation()
+    onChange?.('')
+    setInputValue('')
+    setIsOpen(true)
+    inputRef.current?.focus()
+  }
+
   const handleKeyDown = (e) => {
     if (!isOpen) {
-      if (e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         setIsOpen(true)
         setHighlightedIndex(0)
       }
@@ -135,15 +138,17 @@ const SearchableSelect = ({
         e.preventDefault()
         setIsOpen(false)
         setHighlightedIndex(-1)
+        inputRef.current?.blur()
         break
     }
   }
 
   return (
-    <div className="relative space-y-1">
+    <div className="relative space-y-1.5">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label} {required && <span className="text-red-500">*</span>}
+        <label className="block text-sm font-medium text-text-secondary">
+          {label}
+          {required && <span className="text-danger ml-1">*</span>}
         </label>
       )}
       <div className="relative">
@@ -155,49 +160,66 @@ const SearchableSelect = ({
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          disabled={disabled}
           className={cn(
-            'block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400',
-            error && 'border-red-500 focus:ring-red-500 focus:border-red-500',
+            'input-base pr-10',
+            error && 'border-danger focus:ring-danger/20 focus:border-danger',
             className
           )}
           {...props}
         />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
           {isLoading ? (
-            <ArrowPathIcon className="h-4 w-4 animate-spin text-gray-400" />
+            <ArrowPathIcon className="h-4 w-4 animate-spin text-text-muted" />
           ) : (
-            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+            <>
+              {value && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="p-0.5 rounded hover:bg-bg-hover text-text-muted hover:text-text-primary transition-colors"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              )}
+              <ChevronDownIcon
+                className={cn(
+                  'h-4 w-4 text-text-muted transition-transform',
+                  isOpen && 'rotate-180'
+                )}
+              />
+            </>
           )}
         </div>
       </div>
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
+          className="absolute z-50 mt-1 w-full bg-bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-auto animate-scale-in"
         >
           {options.length === 0 && !isLoading ? (
-            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-              No options found
-            </div>
+            <div className="px-4 py-3 text-sm text-text-tertiary text-center">No options found</div>
           ) : (
             options.map((option, index) => (
-              <div
+              <button
                 key={option.value}
+                type="button"
                 className={cn(
-                  'px-3 py-2 cursor-pointer text-sm',
+                  'w-full px-4 py-2.5 text-left text-sm transition-colors',
                   index === highlightedIndex
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                    : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-bg-hover text-text-primary'
+                    : 'text-text-secondary hover:bg-bg-hover/50',
+                  option.value === value && 'bg-accent-light/30 text-accent'
                 )}
                 onClick={() => handleSelect(option)}
               >
                 {option.label}
-              </div>
+              </button>
             ))
           )}
         </div>
       )}
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   )
 }

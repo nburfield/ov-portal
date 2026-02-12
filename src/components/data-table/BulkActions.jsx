@@ -1,6 +1,7 @@
 import React from 'react'
 import { cn } from '../../utils/cn'
 import Button from '../ui/Button'
+import { CheckBadgeIcon } from '@heroicons/react/24/outline'
 
 const BulkActions = ({
   selectedCount,
@@ -15,28 +16,34 @@ const BulkActions = ({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800',
+        'flex items-center justify-between px-4 py-3 border-b border-border bg-accent-light/30 dark:bg-accent-muted/20 rounded-t-xl',
         className
       )}
     >
-      <div className="flex items-center space-x-4">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          {selectedCount} item{selectedCount !== 1 ? 's' : ''} selected
-        </span>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold">
+            {selectedCount}
+          </div>
+          <span className="text-sm font-medium text-text-primary">
+            {selectedCount === 1 ? 'item selected' : 'items selected'}
+          </span>
+        </div>
+        <div className="h-4 w-px bg-border" />
         <button
           onClick={onSelectAll}
-          className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline"
+          className="text-sm text-accent hover:text-accent-hover transition-colors"
         >
           Select all ({totalCount})
         </button>
         <button
           onClick={onClearSelection}
-          className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline"
+          className="text-sm text-text-tertiary hover:text-text-primary transition-colors"
         >
-          Clear selection
+          Clear
         </button>
       </div>
-      <div className="flex items-center space-x-2">{children}</div>
+      <div className="flex items-center gap-2">{children}</div>
     </div>
   )
 }

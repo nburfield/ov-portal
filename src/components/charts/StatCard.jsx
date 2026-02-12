@@ -1,58 +1,81 @@
 import React from 'react'
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { cn } from '../../utils/cn'
+import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline'
 
-const StatCard = ({ icon, label, value, trend, color }) => {
-  const Icon = icon
-  const colorClasses = {
-    accent: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400',
-    success: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400',
-    warning: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400',
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  trend,
+  trendLabel,
+  description,
+  size = 'md',
+  className,
+}) => {
+  const sizes = {
+    sm: { container: 'p-4', icon: 'h-8 w-8', text: { value: 'text-xl', label: 'text-xs' } },
+    md: { container: 'p-6', icon: 'h-10 w-10', text: { value: 'text-2xl', label: 'text-sm' } },
+    lg: { container: 'p-8', icon: 'h-12 w-12', text: { value: 'text-3xl', label: 'text-base' } },
   }
 
-  const trendColorClasses = {
-    positive: 'text-green-600 dark:text-green-400',
-    negative: 'text-red-600 dark:text-red-400',
+  const iconColors = {
+    accent: 'bg-accent-light text-accent dark:bg-accent-muted dark:text-accent-foreground',
+    success: 'bg-success-light text-success dark:bg-success-muted dark:text-success-foreground',
+    warning: 'bg-warning-light text-warning dark:bg-warning-muted dark:text-warning-foreground',
+    danger: 'bg-danger-light text-danger dark:bg-danger-muted dark:text-danger-foreground',
+    info: 'bg-info-light text-info dark:bg-info-muted dark:text-info-foreground',
   }
 
-  const TrendIcon = trend?.isPositive ? ChevronUpIcon : ChevronDownIcon
+  const trendColors = {
+    positive: 'text-success',
+    negative: 'text-danger',
+    neutral: 'text-text-tertiary',
+  }
+
+  const TrendIcon = trend?.isPositive
+    ? ArrowTrendingUpIcon
+    : trend?.isPositive === false
+      ? ArrowTrendingDownIcon
+      : null
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div
-            className={cn(
-              'flex items-center justify-center w-12 h-12 rounded-full',
-              colorClasses[color]
-            )}
-          >
-            <Icon className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          </div>
-        </div>
-        {trend && (
-          <div className="flex items-center space-x-1">
-            <TrendIcon
+    <div className={cn('surface-interactive', sizes[size].container, className)}>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          {Icon && (
+            <div
               className={cn(
-                'w-4 h-4',
-                trendColorClasses[trend.isPositive ? 'positive' : 'negative']
-              )}
-            />
-            <span
-              className={cn(
-                'text-sm font-medium',
-                trendColorClasses[trend.isPositive ? 'positive' : 'negative']
+                'rounded-xl flex items-center justify-center',
+                iconColors[trend?.color || 'accent'],
+                sizes[size].icon
               )}
             >
-              {trend.value}%
+              <Icon className="h-5 w-5" />
+            </div>
+          )}
+          <div>
+            <p className={cn('text-text-tertiary font-medium', sizes[size].text.label)}>{label}</p>
+            <p className={cn('font-bold text-text-primary mt-1', sizes[size].text.value)}>
+              {value}
+            </p>
+          </div>
+        </div>
+        {trend && TrendIcon && (
+          <div
+            className={cn(
+              'flex items-center gap-1',
+              trendColors[trend.isPositive ? 'positive' : 'negative']
+            )}
+          >
+            <TrendIcon className="h-4 w-4" />
+            <span className="text-sm font-semibold">
+              {typeof trend.value === 'string' ? trend.value : `${Math.abs(trend.value)}%`}
             </span>
+            {trendLabel && <span className="text-xs text-text-tertiary ml-1">{trendLabel}</span>}
           </div>
         )}
       </div>
+      {description && <p className="mt-3 text-sm text-text-tertiary">{description}</p>}
     </div>
   )
 }

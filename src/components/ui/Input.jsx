@@ -1,27 +1,61 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '../../utils/cn'
 
-const Input = ({ label, error, required, type = 'text', placeholder, className, ...props }) => {
-  return (
-    <div className="space-y-1">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
-      <input
-        type={type}
-        placeholder={placeholder}
-        className={cn(
-          'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400',
-          error && 'border-red-500 focus:ring-red-500 focus:border-red-500',
-          className
+const Input = forwardRef(
+  (
+    {
+      label,
+      error,
+      helper,
+      required,
+      type = 'text',
+      placeholder,
+      className,
+      icon,
+      iconPosition = 'left',
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label className="block text-sm font-medium text-text-secondary">
+            {label}
+            {required && <span className="text-danger ml-1">*</span>}
+          </label>
         )}
-        {...props}
-      />
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-    </div>
-  )
-}
+        <div className="relative">
+          {icon && (
+            <div
+              className={cn(
+                'absolute inset-y-0 flex items-center pointer-events-none text-text-muted',
+                iconPosition === 'left' ? 'left-3' : 'right-3'
+              )}
+            >
+              <icon className="h-5 w-5" />
+            </div>
+          )}
+          <input
+            ref={ref}
+            type={type}
+            placeholder={placeholder}
+            className={cn(
+              'input-base',
+              icon && (iconPosition === 'left' ? 'pl-10' : 'pr-10'),
+              error && 'border-danger focus:ring-danger/20 focus:border-danger',
+              className
+            )}
+            {...props}
+          />
+        </div>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        {helper && !error && <p className="text-sm text-text-tertiary">{helper}</p>}
+      </div>
+    )
+  }
+)
+
+Input.displayName = 'Input'
 
 export default Input

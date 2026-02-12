@@ -13,27 +13,34 @@ const Button = ({
   className,
   ...props
 }) => {
-  const baseClasses =
-    'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none'
-
-  const variantClasses = {
-    primary:
-      'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600',
+  const variants = {
+    primary: 'bg-accent text-accent-foreground hover:bg-accent-hover focus:ring-accent shadow-sm',
     secondary:
-      'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 dark:bg-gray-500 dark:hover:bg-gray-600',
-    danger:
-      'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600',
+      'bg-bg-tertiary text-text-primary hover:bg-bg-hover border border-border focus:ring-border',
     ghost:
-      'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
+      'bg-transparent text-text-secondary hover:bg-bg-hover hover:text-text-primary focus:ring-border',
+    danger: 'bg-danger text-danger-foreground hover:bg-danger/90 focus:ring-danger shadow-sm',
+    success: 'bg-success text-success-foreground hover:bg-success/90 focus:ring-success shadow-sm',
+    warning: 'bg-warning text-warning-foreground hover:bg-warning/90 focus:ring-warning shadow-sm',
   }
 
-  const sizeClasses = {
+  const sizes = {
+    xs: 'px-2.5 py-1.5 text-xs',
     sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    md: 'px-4 py-2.5 text-sm',
+    lg: 'px-5 py-2.5 text-base',
+    xl: 'px-6 py-3 text-base',
   }
 
-  const classes = cn(baseClasses, variantClasses[variant], sizeClasses[size], className)
+  const classes = cn(
+    'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+    'focus:outline-none focus:ring-2 focus:ring-offset-2',
+    'disabled:opacity-50 disabled:cursor-not-allowed',
+    'transition-all duration-200',
+    variants[variant],
+    sizes[size],
+    className
+  )
 
   return (
     <button
@@ -43,9 +50,7 @@ const Button = ({
       className={classes}
       {...props}
     >
-      {loading && (
-        <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" data-testid="loading-spinner" />
-      )}
+      {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" data-testid="loading-spinner" />}
       {children}
     </button>
   )

@@ -7,13 +7,13 @@ import {
   create as createFleetAsset,
   update as updateFleetAsset,
 } from '../../services/fleetasset.service'
-import { DataTable } from '../../components/data-table/DataTable'
+import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Modal } from '../../components/ui/Modal'
-import { Input } from '../../components/ui/Input'
-import { Select } from '../../components/ui/Select'
-import { FormActions } from '../../components/forms/FormActions'
+import Modal from '../../components/ui/Modal'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import FormActions from '../../components/forms/FormActions'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'

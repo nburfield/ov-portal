@@ -14,7 +14,7 @@ import { getAll as getUserServices } from '../../services/userservice.service'
 import Button from '../../components/ui/Button'
 import Select from '../../components/ui/Select'
 import Input from '../../components/ui/Input'
-import { DatabaseIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useToast } from '../../hooks/useToast'
 
 const AdminDataExplorerPage = () => {

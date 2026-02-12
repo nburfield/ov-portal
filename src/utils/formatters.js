@@ -41,3 +41,14 @@ export function formatAddress(location) {
 export function formatNumber(num) {
   return new Intl.NumberFormat('en-US').format(num)
 }
+
+// Export all formatters as a single object for convenience
+export const formatters = {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatRelativeDate,
+  formatPhone,
+  formatAddress,
+  formatNumber,
+}

@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import authService from '../services/auth.service.js'
 import { setAuthToken, setOnUnauthorized } from '../services/api.js'
@@ -6,18 +6,51 @@ import ROUTES from '../constants/routes.js'
 
 const AuthContext = createContext()
 
+const TOKEN_KEY = 'auth_token'
+const USER_KEY = 'auth_user'
+const USER_ROLES_KEY = 'auth_user_roles'
+
 let refreshTimeoutId = null
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
 
-  const [state, setState] = useState({
-    token: null,
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    userRoles: {}, // { business_key: role[] }
+  const [state, setState] = useState(() => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    const user = localStorage.getItem(USER_KEY)
+    const userRoles = localStorage.getItem(USER_ROLES_KEY)
+
+    let parsedUser = null
+    let parsedRoles = {}
+
+    try {
+      if (user && user !== 'undefined') {
+        parsedUser = JSON.parse(user)
+      }
+    } catch (e) {
+      console.error('Failed to parse user from localStorage:', e)
+    }
+
+    try {
+      if (userRoles && userRoles !== 'undefined') {
+        parsedRoles = JSON.parse(userRoles)
+      }
+    } catch (e) {
+      console.error('Failed to parse userRoles from localStorage:', e)
+    }
+
+    return {
+      token: token,
+      user: parsedUser,
+      isAuthenticated: !!token,
+      isLoading: false,
+      userRoles: parsedRoles,
+    }
   })
+
+  // Use refs to break circular dependencies
+  const refreshRef = useRef(null)
+  const logoutRef = useRef(null)
 
   const clearRefreshTimeout = useCallback(() => {
     if (refreshTimeoutId) {
@@ -39,10 +72,14 @@ export function AuthProvider({ children }) {
         if (refreshTime > 0) {
           refreshTimeoutId = setTimeout(async () => {
             try {
-              await refresh()
+              if (refreshRef.current) {
+                await refreshRef.current()
+              }
             } catch (error) {
               console.error('Token refresh failed:', error)
-              logout()
+              if (logoutRef.current) {
+                logoutRef.current()
+              }
             }
           }, refreshTime)
         }
@@ -56,10 +93,8 @@ export function AuthProvider({ children }) {
   const register = useCallback(
     async (userData) => {
       try {
-        setState((prev) => ({ ...prev, isLoading: true }))
         await authService.register(userData)
 
-        // After successful registration, automatically log in
         const response = await authService.login({
           user_name: userData.user_name,
           password: userData.password,
@@ -67,6 +102,10 @@ export function AuthProvider({ children }) {
 
         const { token, user } = response
         const userRoles = await authService.getUserRoles()
+
+        localStorage.setItem(TOKEN_KEY, token)
+        localStorage.setItem(USER_KEY, JSON.stringify(user))
+        localStorage.setItem(USER_ROLES_KEY, JSON.stringify(userRoles))
 
         setState({
           token,
@@ -89,11 +128,14 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (credentials) => {
       try {
-        setState((prev) => ({ ...prev, isLoading: true }))
         const response = await authService.login(credentials)
 
         const { token, user } = response
         const userRoles = await authService.getUserRoles()
+
+        localStorage.setItem(TOKEN_KEY, token)
+        localStorage.setItem(USER_KEY, JSON.stringify(user))
+        localStorage.setItem(USER_ROLES_KEY, JSON.stringify(userRoles))
 
         setState({
           token,
@@ -122,6 +164,9 @@ export function AuthProvider({ children }) {
       console.error('Logout API call failed:', error)
     } finally {
       clearRefreshTimeout()
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+      localStorage.removeItem(USER_ROLES_KEY)
       setState({
         token: null,
         user: null,
@@ -138,6 +183,8 @@ export function AuthProvider({ children }) {
       const response = await authService.refresh()
       const { token } = response
 
+      localStorage.setItem(TOKEN_KEY, token)
+
       setState((prev) => ({
         ...prev,
         token,
@@ -146,10 +193,18 @@ export function AuthProvider({ children }) {
       scheduleTokenRefresh(token)
     } catch (error) {
       console.error('Token refresh failed:', error)
-      logout()
+      if (logoutRef.current) {
+        logoutRef.current()
+      }
       throw error
     }
-  }, [logout, scheduleTokenRefresh])
+  }, [scheduleTokenRefresh])
+
+  // Update refs after functions are defined
+  useEffect(() => {
+    refreshRef.current = refresh
+    logoutRef.current = logout
+  }, [refresh, logout])
 
   const updateProfile = useCallback(async (updatedUser) => {
     setState((prev) => ({
@@ -160,18 +215,13 @@ export function AuthProvider({ children }) {
 
   const handleUnauthorized = useCallback(() => {
     logout()
-  }, [])
+  }, [logout]) // logout is correctly included in dependencies
 
   // Wire up API interceptors
   useEffect(() => {
     setAuthToken(() => state.token)
     setOnUnauthorized(handleUnauthorized)
   }, [state.token, handleUnauthorized])
-
-  // Initialize auth state on mount (check for existing token, but since we store in memory, this would be empty)
-  useEffect(() => {
-    setState((prev) => ({ ...prev, isLoading: false }))
-  }, [])
 
   const value = {
     ...state,

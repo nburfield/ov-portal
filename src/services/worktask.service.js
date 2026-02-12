@@ -23,3 +23,11 @@ export const update = async (key, data) => {
 export const remove = async (key) => {
   await api.delete(`/api/v2/worktasks/${key}`)
 }
+
+export const worktaskService = {
+  getAll,
+  getByKey,
+  create,
+  update,
+  remove,
+}

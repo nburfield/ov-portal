@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { healthService } from '../../services/health.service'
-import { Card } from '../../components/ui/Card'
+import Card from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'

@@ -9,10 +9,10 @@ import { formatters } from '../../utils/formatters'
 import { rruleToHumanReadable, getOccurrences } from '../../utils/rrule'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Tabs } from '../../components/ui/Tabs'
-import { Modal } from '../../components/ui/Modal'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { DataTable } from '../../components/data-table/DataTable'
+import Tabs from '../../components/ui/Tabs'
+import Modal from '../../components/ui/Modal'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import DataTable from '../../components/data-table/DataTable'
 import {
   ArrowLeftIcon,
   PencilIcon,

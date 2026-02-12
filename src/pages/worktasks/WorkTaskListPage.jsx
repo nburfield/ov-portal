@@ -4,7 +4,7 @@ import { useApiQuery } from '../../hooks/useApiQuery'
 import { useAuth } from '../../hooks/useAuth'
 import { useBusiness } from '../../hooks/useBusiness'
 import { getAll } from '../../services/worktask.service'
-import { DataTable } from '../../components/data-table/DataTable'
+import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useToast } from '../../hooks/useToast'
@@ -31,7 +31,7 @@ const WorkTaskListPage = () => {
       return { worker_key: user.key }
     }
     return {}
-  }, [isWorker, user?.key])
+  }, [isWorker, user])
 
   const { data: workTasks = [], isLoading } = useApiQuery(() => getAll(queryParams))
 

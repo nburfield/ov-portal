@@ -9,9 +9,9 @@ import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Tabs } from '../../components/ui/Tabs'
-import { Modal } from '../../components/ui/Modal'
-import { DataTable } from '../../components/data-table/DataTable'
+import Tabs from '../../components/ui/Tabs'
+import Modal from '../../components/ui/Modal'
+import DataTable from '../../components/data-table/DataTable'
 import {
   ArrowLeftIcon,
   ClipboardDocumentIcon,

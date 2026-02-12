@@ -14,13 +14,13 @@ import {
 import { getAll as getAllWorkTasks } from '../../services/worktask.service'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Input } from '../../components/ui/Input'
-import { DatePicker } from '../../components/ui/DatePicker'
-import { Tabs } from '../../components/ui/Tabs'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { Textarea } from '../../components/ui/Textarea'
-import { SearchableSelect } from '../../components/ui/SearchableSelect'
-import { FormActions } from '../../components/forms/FormActions'
+import Input from '../../components/ui/Input'
+import DatePicker from '../../components/ui/DatePicker'
+import Tabs from '../../components/ui/Tabs'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import Textarea from '../../components/ui/Textarea'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import FormActions from '../../components/forms/FormActions'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { validateRequired } from '../../utils/validators'
@@ -31,6 +31,7 @@ const InvoiceDetailPage = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { getCurrentRoles } = useBusiness()
+  const [activeTab, setActiveTab] = useState('details')
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false)
   const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false)
   const [showVoidDialog, setShowVoidDialog] = useState(false)

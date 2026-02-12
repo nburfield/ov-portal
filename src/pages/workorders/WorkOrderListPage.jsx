@@ -4,7 +4,7 @@ import { useApiQuery } from '../../hooks/useApiQuery'
 import { useAuth } from '../../hooks/useAuth'
 import { useBusiness } from '../../hooks/useBusiness'
 import { getAll } from '../../services/workorder.service'
-import { DataTable } from '../../components/data-table/DataTable'
+import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useToast } from '../../hooks/useToast'
@@ -35,7 +35,7 @@ const WorkOrderListPage = () => {
       return { assigned_business_key: activeBusiness.business_key }
     }
     return {}
-  }, [isCustomerRole, isWorkerRole, user?.customer_key, activeBusiness?.business_key])
+  }, [isCustomerRole, isWorkerRole, user, activeBusiness])
 
   const { data: workOrders = [], isLoading } = useApiQuery(() => getAll(queryParams))
 

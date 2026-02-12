@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { userService } from '../../services/user.service'
 import { useToast } from '../../hooks/useToast'
-import { Tabs } from '../../components/ui/Tabs'
+import Tabs from '../../components/ui/Tabs'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { DataTable } from '../../components/data-table/DataTable'
+import DataTable from '../../components/data-table/DataTable'
 import { formatters } from '../../utils/formatters'
 import {
   ArrowLeftIcon,

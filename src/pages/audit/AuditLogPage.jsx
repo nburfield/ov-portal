@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useBusiness } from '../../hooks/useBusiness'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { getAuditLogs } from '../../services/audit.service'

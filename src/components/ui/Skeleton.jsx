@@ -33,4 +33,5 @@ const Skeleton = ({ variant = 'text', width, height, count = 1, className, ...pr
   }
 }
 
+export { Skeleton }
 export default Skeleton

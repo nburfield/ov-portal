@@ -8,21 +8,21 @@ import {
   addSubcontractor,
   removeSubcontractor,
 } from '../../services/business.service'
-import { Tabs } from '../../components/ui/Tabs'
+import Tabs from '../../components/ui/Tabs'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { Select } from '../../components/ui/Select'
-import { JsonEditor } from '../../components/forms/JsonEditor'
-import { DataTable } from '../../components/data-table/DataTable'
-import { Modal } from '../../components/ui/Modal'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { FileUpload } from '../../components/ui/FileUpload'
-import { SearchableSelect } from '../../components/ui/SearchableSelect'
-import { FormActions } from '../../components/forms/FormActions'
+import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
+import JsonEditor from '../../components/forms/JsonEditor'
+import DataTable from '../../components/data-table/DataTable'
+import Modal from '../../components/ui/Modal'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import FileUpload from '../../components/ui/FileUpload'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import FormActions from '../../components/forms/FormActions'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
-import { CopyIcon } from '@heroicons/react/24/outline'
+import { ClipboardIcon } from '@heroicons/react/24/outline'
 
 const BusinessPage = () => {
   const { activeBusiness } = useBusiness()
@@ -43,12 +43,16 @@ const BusinessPage = () => {
 
   useEffect(() => {
     if (business) {
-      setFormData({
-        name: business.name || '',
-        type: business.type || 'primary',
-        status: business.status || 'active',
-        settings: business.settings || {},
-      })
+      // Use setTimeout to avoid synchronous setState in effect
+      const timeoutId = setTimeout(() => {
+        setFormData({
+          name: business.name || '',
+          type: business.type || 'primary',
+          status: business.status || 'active',
+          settings: business.settings || {},
+        })
+      }, 0)
+      return () => clearTimeout(timeoutId)
     }
   }, [business])
 
@@ -157,7 +161,7 @@ const BusinessPage = () => {
               {business.key}
             </code>
             <Button variant="ghost" size="sm" onClick={handleCopyKey} className="p-1">
-              <CopyIcon className="h-4 w-4" />
+              <ClipboardIcon className="h-4 w-4" />
             </Button>
           </div>
         </div>

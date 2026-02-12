@@ -5,21 +5,29 @@ export const getAll = async (params = {}) => {
   return response.data
 }
 
-export const getByKey = async (key) => {
+const getByKey = async (key) => {
   const response = await api.get(`/api/v2/services/${key}`)
   return response.data
 }
 
-export const create = async (data) => {
+const create = async (data) => {
   const response = await api.post('/api/v2/services', data)
   return response.data
 }
 
-export const update = async (key, data) => {
+const update = async (key, data) => {
   const response = await api.put(`/api/v2/services/${key}`, data)
   return response.data
 }
 
-export const remove = async (key) => {
+const remove = async (key) => {
   await api.delete(`/api/v2/services/${key}`)
+}
+
+export const serviceService = {
+  getAll,
+  getByKey,
+  create,
+  update,
+  remove,
 }

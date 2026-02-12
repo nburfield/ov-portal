@@ -76,3 +76,24 @@ export const getParents = async (businessKey) => {
   const response = await api.get(`/api/v2/businesses/${businessKey}/parents`)
   return response.data
 }
+
+// Default export for convenience
+const businessService = {
+  getAll,
+  getBusinesses: getAll, // Alias for getAll for backward compatibility
+  getByKey,
+  create,
+  update,
+  remove,
+  getContracts,
+  addContract,
+  removeContract,
+  uploadContract,
+  getSubcontractors,
+  addSubcontractor,
+  removeSubcontractor,
+  getParents,
+}
+
+export { businessService }
+export default businessService

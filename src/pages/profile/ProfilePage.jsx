@@ -6,10 +6,10 @@ import { useToast } from '../../hooks/useToast'
 import { userService } from '../../services/user.service'
 import { validateEmail, validatePhone, validateRequired } from '../../utils/validators'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { Modal } from '../../components/ui/Modal'
+import Input from '../../components/ui/Input'
+import Modal from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
-import { FormActions } from '../../components/forms/FormActions'
+import FormActions from '../../components/forms/FormActions'
 
 const ProfilePage = () => {
   const { user, updateProfile } = useAuth()
@@ -24,10 +24,10 @@ const ProfilePage = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      first_name: user.first_name || '',
-      last_name: user.last_name || '',
-      email: user.email || '',
-      phone: user.phone || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
     },
   })
 
@@ -44,7 +44,7 @@ const ProfilePage = () => {
   const onSubmit = async (data) => {
     setIsLoading(true)
     try {
-      const updatedUser = await userService.update(user.key, data)
+      const updatedUser = await userService.update(user?.key, data)
       updateProfile(updatedUser)
       showToast('Profile updated successfully', 'success')
       setShowEditModal(false)
@@ -67,38 +67,40 @@ const ProfilePage = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             First Name
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.first_name}</p>
+          <p className="text-sm text-gray-900 dark:text-white">{user?.first_name}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Last Name
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.last_name}</p>
+          <p className="text-sm text-gray-900 dark:text-white">{user?.last_name}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Username
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{user.user_name}</p>
+          <p className="text-sm text-gray-900 dark:text-white font-mono">{user?.user_name}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.email}</p>
+          <p className="text-sm text-gray-900 dark:text-white">{user?.email}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Phone
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.phone ? user.phone : 'N/A'}</p>
+          <p className="text-sm text-gray-900 dark:text-white">
+            {user?.phone ? user.phone : 'N/A'}
+          </p>
         </div>
       </div>
 
       <div>
         <h2 className="text-lg font-medium mb-4">Businesses and Roles</h2>
         <div className="space-y-4">
-          {businesses.map((business) => (
+          {(Array.isArray(businesses) ? businesses : []).map((business) => (
             <div key={business.business_key} className="border rounded-lg p-4">
               <h3 className="font-medium">{business.name}</h3>
               <div className="flex flex-wrap gap-2 mt-2">

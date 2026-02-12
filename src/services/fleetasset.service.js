@@ -23,3 +23,11 @@ export const update = async (key, data) => {
 export const remove = async (key) => {
   await api.delete(`/api/v2/fleetassets/${key}`)
 }
+
+export const fleetassetService = {
+  getAll,
+  getByKey,
+  create,
+  update,
+  remove,
+}

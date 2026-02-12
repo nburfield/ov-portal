@@ -9,4 +9,5 @@ function Badge({ status, children }) {
   )
 }
 
+export { Badge }
 export default Badge

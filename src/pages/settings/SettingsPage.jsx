@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useTheme } from '../../hooks/useTheme'
+import { useTheme } from '../../contexts/ThemeContext'
 import { useToast } from '../../hooks/useToast'
 import { changePassword } from '../../services/auth.service'
 import { validatePassword, validateRequired } from '../../utils/validators'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { Card } from '../../components/ui/Card'
-import { Toggle } from '../../components/ui/Toggle'
+import Input from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
+import Toggle from '../../components/ui/Toggle'
 
 const SettingsPage = () => {
   const { theme, toggleTheme, isDark } = useTheme()

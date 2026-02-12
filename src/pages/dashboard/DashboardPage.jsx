@@ -1,17 +1,17 @@
 import React, { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ClipboardListIcon,
-  CheckSquareIcon,
-  FileTextIcon,
-  DollarSignIcon,
+  ClipboardDocumentListIcon,
+  ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
   UserIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
-import { StatCard } from '../../components/charts/StatCard'
-import { AreaChart } from '../../components/charts/AreaChart'
-import { DonutChart } from '../../components/charts/DonutChart'
-import { DataTable } from '../../components/data-table/DataTable'
+import StatCard from '../../components/charts/StatCard'
+import AreaChart from '../../components/charts/AreaChart'
+import DonutChart from '../../components/charts/DonutChart'
+import DataTable from '../../components/data-table/DataTable'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -168,7 +168,7 @@ const DashboardPage = () => {
         type: 'task',
         description: `Task completed: ${task.name}`,
         timestamp: task.completed_at,
-        icon: CheckSquareIcon,
+        icon: ClipboardDocumentCheckIcon,
         color: 'success',
       })
     )
@@ -177,7 +177,7 @@ const DashboardPage = () => {
         type: 'invoice',
         description: `Invoice ${inv.status}: ${inv.key}`,
         timestamp: inv.updated_at,
-        icon: FileTextIcon,
+        icon: DocumentTextIcon,
         color: 'warning',
       })
     )
@@ -221,27 +221,27 @@ const DashboardPage = () => {
       {/* Row 1: StatCards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={ClipboardListIcon}
+          icon={ClipboardDocumentListIcon}
           label="Active Work Orders"
           value={activeCount}
           color="accent"
         />
         <StatCard
-          icon={CheckSquareIcon}
+          icon={ClipboardDocumentCheckIcon}
           label="Tasks This Week"
           value={taskCount}
           trend={{ isPositive: taskTrend >= 0, value: Math.abs(taskTrend).toFixed(1) }}
           color="success"
         />
         <StatCard
-          icon={FileTextIcon}
+          icon={DocumentTextIcon}
           label="Open Invoices"
           value={openCount}
           trend={{ isPositive: openTrend >= 0, value: Math.abs(openTrend).toFixed(1) }}
           color="warning"
         />
         <StatCard
-          icon={DollarSignIcon}
+          icon={CurrencyDollarIcon}
           label="Revenue This Month"
           value={`$${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           trend={{ isPositive: revenueTrend >= 0, value: Math.abs(revenueTrend).toFixed(1) }}

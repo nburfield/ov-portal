@@ -68,7 +68,11 @@ export function BusinessProvider({ children }) {
   }, [state.activeBusiness, state.roles])
 
   useEffect(() => {
-    refreshBusinesses()
+    // Use setTimeout to avoid synchronous setState in effect
+    const timeoutId = setTimeout(() => {
+      refreshBusinesses()
+    }, 0)
+    return () => clearTimeout(timeoutId)
   }, [refreshBusinesses])
 
   const value = {

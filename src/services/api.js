@@ -32,7 +32,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response
-      if (status === 401) {
+      const skipAuthRedirect = error.config?.skipAuthRedirect === true
+      if (status === 401 && !skipAuthRedirect) {
         if (onUnauthorized) onUnauthorized()
       } else if (status === 403) {
         toast.error("You don't have permission to perform this action")

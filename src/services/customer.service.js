@@ -63,3 +63,21 @@ export const getContractUrl = async (customerKey, contractKey) => {
   const response = await api.get(`/api/v2/customers/${customerKey}/contracts/${contractKey}/url`)
   return response.data.get_url
 }
+
+// Default export for convenience
+const customerService = {
+  getAll,
+  getByKey,
+  create,
+  update,
+  remove,
+  getContacts,
+  createContact,
+  getContracts,
+  createContract,
+  uploadContract,
+  getContractUrl,
+}
+
+export { customerService }
+export default customerService

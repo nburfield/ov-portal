@@ -180,7 +180,7 @@ const UserDetailPage = () => {
 
   return (
     <div data-testid="user-detail-page" className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-9/10 mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
             <div>
@@ -206,6 +206,15 @@ const UserDetailPage = () => {
               )}
             </div>
             <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
+              <Button
+                variant="tertiary"
+                onClick={handleBack}
+                data-testid="back-button"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+                Back
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleRefresh}
@@ -235,7 +244,7 @@ const UserDetailPage = () => {
                 Refresh
               </Button>
               <Button
-                variant="outline"
+                variant="primary"
                 onClick={handleEdit}
                 data-testid="user-edit-button"
                 className="flex items-center gap-2"
@@ -243,29 +252,8 @@ const UserDetailPage = () => {
                 <PencilIcon className="h-4 w-4" />
                 Edit
               </Button>
-              <Button
-                variant="danger"
-                onClick={handleDelete}
-                data-testid="user-delete-button"
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Delete
-              </Button>
             </div>
           </div>
-        </div>
-
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            data-testid="back-button"
-            className="flex items-center gap-2"
-          >
-            <ArrowLeftIcon className="h-4 w-4" />
-            Back to Users
-          </Button>
         </div>
 
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />

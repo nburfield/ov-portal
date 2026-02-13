@@ -1,63 +1,34 @@
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import React, { useState, useMemo } from 'react'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { userService } from '../../services/user.service'
-import { serviceService } from '../../services/service.service'
 import { userserviceService } from '../../services/userservice.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-import SearchableSelect from '../../components/ui/SearchableSelect'
-import DatePicker from '../../components/ui/DatePicker'
-import FormActions from '../../components/forms/FormActions'
+import CreateCertificationModal from '../../components/modals/CreateCertificationModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
+import { ArrowPathIcon, PlusIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { isBefore, addDays } from 'date-fns'
-import { PlusIcon } from '@heroicons/react/24/outline'
 
 const CertificationListPage = () => {
   const { showToast } = useToast()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   const { data: certifications = [], isLoading, refetch } = useApiQuery(userserviceService.getAll)
 
-  const handleCreateCertification = () => {
-    setShowCreateModal(true)
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value)
+    setSearchTerm(e.target.value)
   }
 
-  const handleCloseModal = () => {
-    setShowCreateModal(false)
-  }
-
-  const handleSaveCertification = async (certificationData) => {
-    try {
-      await userserviceService.create(certificationData)
-      showToast('Certification created successfully', 'success')
-      refetch()
-      handleCloseModal()
-    } catch {
-      showToast('Failed to save certification', 'error')
-    }
-  }
-
-  const handleExportCSV = () => {
-    try {
-      exportToCSV(certifications, columns, 'certifications')
-      showToast('CSV exported successfully', 'success')
-    } catch {
-      showToast('Failed to export CSV', 'error')
-    }
-  }
-
-  const handleExportPDF = () => {
-    try {
-      exportToPDF(certifications, columns, 'Certifications Report')
-      showToast('PDF exported successfully', 'success')
-    } catch {
-      showToast('Failed to export PDF', 'error')
-    }
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
   }
 
   const getCertificationStatus = (expiresAt) => {
@@ -82,18 +53,91 @@ const CertificationListPage = () => {
     }
   }
 
+  const certificationsData = useMemo(() => {
+    if (Array.isArray(certifications)) return certifications
+    if (Array.isArray(certifications?.values)) return certifications.values
+    return []
+  }, [certifications])
+
+  const filteredCertifications = useMemo(() => {
+    let filtered = certificationsData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter((cert) => {
+        const userName = `${cert.user?.first_name} ${cert.user?.last_name}`.toLowerCase()
+        const serviceName = cert.service?.name?.toLowerCase() || ''
+        return userName.includes(lowerSearch) || serviceName.includes(lowerSearch)
+      })
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((cert) => getCertificationStatus(cert.expires_at) === statusFilter)
+    }
+
+    return filtered
+  }, [certificationsData, searchTerm, statusFilter])
+
+  const handleCreateCertification = () => {
+    setShowCreateModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowCreateModal(false)
+  }
+
+  const handleSaveCertification = async (certificationData) => {
+    try {
+      await userserviceService.create(certificationData)
+      showToast('Certification created successfully', 'success')
+      refetch()
+      handleCloseModal()
+    } catch {
+      showToast('Failed to save certification', 'error')
+    }
+  }
+
+  const handleExportCSV = () => {
+    try {
+      exportToCSV(filteredCertifications, columns, 'certifications')
+      showToast('CSV exported successfully', 'success')
+    } catch {
+      showToast('Failed to export CSV', 'error')
+    }
+  }
+
+  const handleExportPDF = () => {
+    try {
+      exportToPDF(filteredCertifications, columns, 'Certifications Report')
+      showToast('PDF exported successfully', 'success')
+    } catch {
+      showToast('Failed to export PDF', 'error')
+    }
+  }
+
   const columns = [
     {
       accessorKey: 'user',
-      header: 'User',
-      cell: ({ row }) => `${row.original.user?.first_name} ${row.original.user?.last_name}`,
+      header: 'Worker',
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium text-gray-900 dark:text-white">
+            {row.original.user?.first_name} {row.original.user?.last_name}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.user?.email}</div>
+        </div>
+      ),
       enableSorting: true,
       filterFn: 'includesString',
     },
     {
       accessorKey: 'service',
       header: 'Service',
-      cell: ({ row }) => row.original.service?.name,
+      cell: ({ row }) => (
+        <div className="font-medium text-gray-900 dark:text-white">
+          {row.original.service?.name}
+        </div>
+      ),
       enableSorting: true,
       filterFn: (row, columnId, filterValue) => {
         if (!filterValue) return true
@@ -103,7 +147,10 @@ const CertificationListPage = () => {
     {
       accessorKey: 'certified_at',
       header: 'Certified At',
-      cell: ({ row }) => formatters.formatDate(new Date(row.original.certified_at)),
+      cell: ({ row }) =>
+        row.original.certified_at
+          ? formatters.formatDate(new Date(row.original.certified_at))
+          : 'N/A',
       enableSorting: true,
     },
     {
@@ -114,11 +161,6 @@ const CertificationListPage = () => {
           ? formatters.formatDate(new Date(row.original.expires_at))
           : 'Never',
       enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        const status = getCertificationStatus(row.original.expires_at)
-        return status === filterValue
-      },
     },
     {
       accessorKey: 'status',
@@ -136,170 +178,85 @@ const CertificationListPage = () => {
     },
   ]
 
-  const emptyState = {
-    title: 'No certifications found',
-    description: 'Get started by adding your first certification.',
-    action: {
-      label: 'Add Certification',
-      onClick: handleCreateCertification,
-    },
-  }
+  const hasActiveFilters = searchTerm || statusFilter
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Certifications</h1>
-        <Button onClick={handleCreateCertification} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
-          Add Certification
-        </Button>
-      </div>
+    <div data-testid="certifications-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <ShieldCheckIcon className="h-8 w-8 text-blue-600" />
+                Certifications
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage worker service certifications ({filteredCertifications.length} of{' '}
+                {certificationsData.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleCreateCertification}
+                data-testid="create-certification-button"
+                className="flex items-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Add Certification
+              </Button>
+            </div>
+          </div>
+        </div>
 
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={certifications}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-      />
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <CertificationFormModal
-          certification={null}
-          onSave={handleSaveCertification}
-          onClose={handleCloseModal}
+        <DataTable
+          columns={columns}
+          data={filteredCertifications}
+          isLoading={isLoading}
+          enableSelection={false}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by worker or service...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Expiring Soon', label: 'Expiring Soon' },
+                  { value: 'Expired', label: 'Expired' },
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
         />
-      )}
+
+        <CreateCertificationModal
+          isOpen={showCreateModal}
+          onClose={handleCloseModal}
+          onSuccess={handleSaveCertification}
+        />
+      </div>
     </div>
-  )
-}
-
-const CertificationFormModal = ({ certification, onSave, onClose }) => {
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: certification
-      ? {
-          user_key: certification.user_key,
-          service_key: certification.service_key,
-          certified_at: certification.certified_at,
-          expires_at: certification.expires_at,
-        }
-      : {
-          certified_at: new Date().toISOString().split('T')[0], // Default to today
-        },
-  })
-
-  const loadUserOptions = async (searchTerm) => {
-    try {
-      const users = await userService.getAll({ search: searchTerm })
-      return users
-        .filter((user) => user.roles?.includes('worker'))
-        .map((user) => ({
-          value: user.key,
-          label: `${user.first_name} ${user.last_name}`,
-        }))
-    } catch {
-      return []
-    }
-  }
-
-  const loadServiceOptions = async (searchTerm) => {
-    try {
-      const services = await serviceService.getAll({ search: searchTerm })
-      return services
-        .filter((service) => service.status === 'active')
-        .map((service) => ({
-          value: service.key,
-          label: service.name,
-        }))
-    } catch {
-      return []
-    }
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      showToast('Failed to save certification', 'error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const isEdit = !!certification
-
-  return (
-    <Modal
-      isOpen={true}
-      onClose={onClose}
-      title={isEdit ? 'Edit Certification' : 'Add Certification'}
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* User */}
-        <div>
-          <SearchableSelect
-            label="User"
-            value={watch('user_key')}
-            onChange={(value) => setValue('user_key', value)}
-            loadOptions={loadUserOptions}
-            error={errors.user_key?.message}
-            required
-            placeholder="Search for a worker..."
-          />
-        </div>
-
-        {/* Service */}
-        <div>
-          <SearchableSelect
-            label="Service"
-            value={watch('service_key')}
-            onChange={(value) => setValue('service_key', value)}
-            loadOptions={loadServiceOptions}
-            error={errors.service_key?.message}
-            required
-            placeholder="Search for a service..."
-          />
-        </div>
-
-        {/* Certified At */}
-        <div>
-          <DatePicker
-            label="Certified At"
-            value={watch('certified_at')}
-            onChange={(value) => setValue('certified_at', value)}
-            error={errors.certified_at?.message}
-            required
-          />
-        </div>
-
-        {/* Expires At */}
-        <div>
-          <DatePicker
-            label="Expires At (optional)"
-            value={watch('expires_at')}
-            onChange={(value) => setValue('expires_at', value)}
-            error={errors.expires_at?.message}
-          />
-        </div>
-
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
   )
 }
 

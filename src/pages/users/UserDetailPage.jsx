@@ -75,7 +75,19 @@ const UserDetailPage = () => {
       await navigator.clipboard.writeText(user?.key || '')
       showSuccess('User key copied to clipboard')
     } catch {
-      showError('Failed to copy user key')
+      const textArea = document.createElement('textarea')
+      textArea.value = user?.key || ''
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      const success = document.execCommand('copy')
+      document.body.removeChild(textArea)
+      if (success) {
+        showSuccess('User key copied to clipboard')
+      } else {
+        showError('Failed to copy user key')
+      }
     }
   }
 

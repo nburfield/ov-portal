@@ -1,21 +1,38 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useBusiness } from '../../hooks/useBusiness'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { getAuditLogs } from '../../services/audit.service'
 import DataTable from '../../components/data-table/DataTable'
 import Badge from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import DatePicker from '../../components/ui/DatePicker'
-import Button from '../../components/ui/Button'
+import AuditLogDetailsModal from '../../components/modals/AuditLogDetailsModal'
+import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, EyeIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { subDays, startOfDay, endOfDay } from 'date-fns'
+import { debounce } from 'lodash'
 
 const AuditLogPage = () => {
   const { activeBusiness } = useBusiness()
-  const [expandedRows, setExpandedRows] = useState(new Set())
+  const { showToast } = useToast()
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [eventTypeFilter, setEventTypeFilter] = useState('')
+  const [actionFilter, setActionFilter] = useState('')
+  const [resourceFilter, setResourceFilter] = useState('')
+  const [selectedLog, setSelectedLog] = useState(null)
   const [dateFrom, setDateFrom] = useState(subDays(new Date(), 7))
   const [dateTo, setDateTo] = useState(new Date())
+
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
 
   const {
     data: auditLogs = [],
@@ -30,26 +47,85 @@ const AuditLogPage = () => {
     })
   }, [activeBusiness?.business_key, dateFrom, dateTo])
 
-  const handleRowClick = useCallback(
-    (row) => {
-      const newExpanded = new Set(expandedRows)
-      if (newExpanded.has(row.original.id)) {
-        newExpanded.delete(row.original.id)
-      } else {
-        newExpanded.add(row.original.id)
-      }
-      setExpandedRows(newExpanded)
-    },
-    [expandedRows]
-  )
+  const auditLogsData = useMemo(() => {
+    if (Array.isArray(auditLogs)) return auditLogs
+    if (Array.isArray(auditLogs?.values)) return auditLogs.values
+    return []
+  }, [auditLogs])
+
+  const filteredLogs = useMemo(() => {
+    let filtered = auditLogsData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (log) =>
+          log.actor?.toLowerCase().includes(lowerSearch) ||
+          log.resource_type?.toLowerCase().includes(lowerSearch) ||
+          log.resource_key?.toLowerCase().includes(lowerSearch) ||
+          log.event_type?.toLowerCase().includes(lowerSearch) ||
+          log.action?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (eventTypeFilter) {
+      filtered = filtered.filter((log) => log.event_type === eventTypeFilter)
+    }
+
+    if (actionFilter) {
+      filtered = filtered.filter((log) => log.action === actionFilter)
+    }
+
+    if (resourceFilter) {
+      filtered = filtered.filter((log) => log.resource_type === resourceFilter)
+    }
+
+    return filtered
+  }, [auditLogsData, searchTerm, eventTypeFilter, actionFilter, resourceFilter])
+
+  const handleViewDetails = (row) => {
+    setSelectedLog(row.original)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedLog(null)
+  }
 
   const handleExportCSV = () => {
-    exportToCSV(auditLogs, columns, 'audit-logs')
+    try {
+      exportToCSV(filteredLogs, columns, 'audit-logs')
+      showToast('CSV exported successfully', 'success')
+    } catch {
+      showToast('Failed to export CSV', 'error')
+    }
   }
 
   const handleExportPDF = () => {
-    exportToPDF(auditLogs, columns, 'Audit Logs')
+    try {
+      exportToPDF(filteredLogs, columns, 'Audit Logs Report')
+      showToast('PDF exported successfully', 'success')
+    } catch {
+      showToast('Failed to export PDF', 'error')
+    }
   }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setEventTypeFilter('')
+    setActionFilter('')
+    setResourceFilter('')
+  }
+
+  const handleDateFromChange = (e) => {
+    setDateFrom(new Date(e.target.value))
+  }
+
+  const handleDateToChange = (e) => {
+    setDateTo(new Date(e.target.value))
+  }
+
+  const hasActiveFilters = searchTerm || eventTypeFilter || actionFilter || resourceFilter
 
   const columns = [
     {
@@ -63,18 +139,11 @@ const AuditLogPage = () => {
       accessorKey: 'event_type',
       header: 'Event Type',
       cell: ({ row }) => (
-        <Badge status={row.original.event_type}>{row.original.event_type.replace('_', ' ')}</Badge>
+        <Badge status={row.original.event_type}>
+          {row.original.event_type?.replace(/_/g, ' ')}
+        </Badge>
       ),
       enableSorting: true,
-      meta: {
-        type: 'select',
-        options: [
-          { value: 'security', label: 'Security' },
-          { value: 'billing', label: 'Billing' },
-          { value: 'access', label: 'Access' },
-          { value: 'work_task', label: 'Work Task' },
-        ],
-      },
       size: 120,
     },
     {
@@ -86,122 +155,167 @@ const AuditLogPage = () => {
     {
       accessorKey: 'resource',
       header: 'Resource',
-      cell: ({ row }) => `${row.original.resource_type}:${row.original.resource_key}`,
+      cell: ({ row }) => (
+        <code className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+          {row.original.resource_type}:{row.original.resource_key}
+        </code>
+      ),
       enableSorting: true,
-      meta: {
-        type: 'select',
-        options: [
-          { value: 'user', label: 'User' },
-          { value: 'workorder', label: 'Work Order' },
-          { value: 'invoice', label: 'Invoice' },
-          { value: 'fleet', label: 'Fleet Asset' },
-        ],
-      },
       size: 150,
     },
     {
       accessorKey: 'action',
       header: 'Action',
+      cell: ({ row }) => (
+        <span className="capitalize">{row.original.action?.replace(/_/g, ' ')}</span>
+      ),
       enableSorting: true,
-      meta: {
-        type: 'select',
-        options: [
-          { value: 'create', label: 'Create' },
-          { value: 'update', label: 'Update' },
-          { value: 'delete', label: 'Delete' },
-          { value: 'status_change', label: 'Status Change' },
-        ],
-      },
       size: 120,
     },
     {
-      id: 'expand',
-      header: '',
+      id: 'actions',
+      header: 'Actions',
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
+        <button
           onClick={(e) => {
             e.stopPropagation()
-            handleRowClick(row)
+            handleViewDetails(row)
           }}
+          className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          {expandedRows.has(row.original.id) ? (
-            <ChevronDownIcon className="h-4 w-4" />
-          ) : (
-            <ChevronRightIcon className="h-4 w-4" />
-          )}
-        </Button>
+          <EyeIcon className="h-4 w-4" />
+        </button>
       ),
       enableSorting: false,
-      size: 50,
+      size: 80,
     },
   ]
 
-  const emptyState = {
-    title: 'No audit logs found',
-    description: 'No audit events match your current filters.',
-  }
+  const eventTypeOptions = [
+    { value: '', label: 'All Types' },
+    { value: 'security', label: 'Security' },
+    { value: 'billing', label: 'Billing' },
+    { value: 'access', label: 'Access' },
+    { value: 'work_task', label: 'Work Task' },
+  ]
+
+  const actionOptions = [
+    { value: '', label: 'All Actions' },
+    { value: 'create', label: 'Create' },
+    { value: 'update', label: 'Update' },
+    { value: 'delete', label: 'Delete' },
+    { value: 'status_change', label: 'Status Change' },
+  ]
+
+  const resourceOptions = [
+    { value: '', label: 'All Resources' },
+    { value: 'user', label: 'User' },
+    { value: 'workorder', label: 'Work Order' },
+    { value: 'invoice', label: 'Invoice' },
+    { value: 'fleet', label: 'Fleet Asset' },
+  ]
 
   if (!activeBusiness) {
     return <div>Please select a business</div>
   }
 
   return (
-    <div data-testid="audit-log-page" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 data-testid="audit-log-list" className="text-2xl font-bold">
-          Audit Log
-        </h1>
-      </div>
-
-      <div className="bg-bg-card border border-border rounded-lg p-4">
-        <div className="flex gap-4 items-end">
-          <DatePicker
-            data-testid="audit-date-filter"
-            label="From Date"
-            value={dateFrom.toISOString().split('T')[0]}
-            onChange={(e) => setDateFrom(new Date(e.target.value))}
-          />
-          <DatePicker
-            data-testid="audit-date-to-filter"
-            label="To Date"
-            value={dateTo.toISOString().split('T')[0]}
-            onChange={(e) => setDateTo(new Date(e.target.value))}
-          />
-          <Button onClick={refetch} data-testid="apply-audit-filter">
-            Apply Filters
-          </Button>
-        </div>
-      </div>
-
-      <DataTable
-        data-testid="audit-log-list"
-        columns={columns}
-        data={auditLogs}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={false}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-      />
-
-      {auditLogs.map(
-        (log) =>
-          expandedRows.has(log.id) && (
-            <div
-              key={log.id}
-              data-testid={`audit-entry-${log.id}`}
-              className="bg-bg-secondary border border-border rounded-lg p-4 mt-2"
-            >
-              <h3 className="font-semibold mb-2">Event Details</h3>
-              <pre className="text-sm bg-bg-card p-4 rounded border overflow-x-auto">
-                {JSON.stringify(log.details || log, null, 2)}
-              </pre>
+    <div data-testid="audit-log-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <ClockIcon className="h-8 w-8 text-blue-600" />
+                Audit Log
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                View system activity logs ({filteredLogs.length} of {auditLogsData.length || 0}{' '}
+                total)
+              </p>
             </div>
-          )
-      )}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-bg-card border border-border rounded-lg p-4 mb-4">
+          <div className="flex gap-4 items-end">
+            <DatePicker
+              data-testid="audit-date-filter"
+              label="From Date"
+              value={dateFrom.toISOString().split('T')[0]}
+              onChange={handleDateFromChange}
+            />
+            <DatePicker
+              data-testid="audit-date-to-filter"
+              label="To Date"
+              value={dateTo.toISOString().split('T')[0]}
+              onChange={handleDateToChange}
+            />
+          </div>
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredLogs}
+          isLoading={isLoading}
+          onRowClick={handleViewDetails}
+          enableSelection={false}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by actor, resource, or type...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'eventType',
+                label: 'Event Type',
+                value: eventTypeFilter,
+                onChange: (e) => setEventTypeFilter(e.target.value),
+                options: eventTypeOptions,
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                value: actionFilter,
+                onChange: (e) => setActionFilter(e.target.value),
+                options: actionOptions,
+              },
+              {
+                id: 'resource',
+                label: 'Resource',
+                value: resourceFilter,
+                onChange: (e) => setResourceFilter(e.target.value),
+                options: resourceOptions,
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+        />
+
+        {selectedLog && (
+          <AuditLogDetailsModal
+            isOpen={!!selectedLog}
+            onClose={handleCloseModal}
+            auditLog={selectedLog}
+          />
+        )}
+      </div>
     </div>
   )
 }

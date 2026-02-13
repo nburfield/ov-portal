@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useAuth } from '../../hooks/useAuth'
-import { useBusiness } from '../../hooks/useBusiness'
-import { getAll } from '../../services/worktask.service'
+import { worktaskService } from '../../services/worktask.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -11,7 +9,10 @@ import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
 import { hasMinRole, ROLES } from '../../constants/roles'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../../hooks/useAuth'
+import { useBusiness } from '../../hooks/useBusiness'
+import { ClipboardDocumentCheckIcon, ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
 
 const WorkTaskListPage = () => {
   const navigate = useNavigate()
@@ -19,21 +20,87 @@ const WorkTaskListPage = () => {
   const { user } = useAuth()
   const { getCurrentRoles } = useBusiness()
   const [selectedRows, setSelectedRows] = useState([])
-  const [quickFilter, setQuickFilter] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
 
   const currentRoles = getCurrentRoles()
   const isOwnerOrManager = hasMinRole(currentRoles, ROLES.MANAGER)
   const isWorker = currentRoles.includes(ROLES.WORKER)
 
-  // Determine query params based on role
   const queryParams = useMemo(() => {
+    const params = {}
     if (isWorker && user?.key) {
-      return { worker_key: user.key }
+      params.worker_key = user.key
     }
-    return {}
+    return params
   }, [isWorker, user])
 
-  const { data: workTasks = [], isLoading } = useApiQuery(() => getAll(queryParams))
+  const {
+    data: workTasks = [],
+    isLoading,
+    refetch,
+  } = useApiQuery(() => worktaskService.getAll(queryParams), { key: ['worktasks', queryParams] })
+
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
+    setDateFilter('')
+  }
+
+  const workTasksData = useMemo(() => {
+    if (Array.isArray(workTasks)) return workTasks
+    if (Array.isArray(workTasks?.values)) return workTasks.values
+    return []
+  }, [workTasks])
+
+  const filteredWorkTasks = useMemo(() => {
+    let filtered = workTasksData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (task) =>
+          task.work_order_key?.toLowerCase().includes(lowerSearch) ||
+          task.worker_name?.toLowerCase().includes(lowerSearch) ||
+          task.service_snapshot?.name?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((task) => task.status === statusFilter)
+    }
+
+    if (dateFilter) {
+      const now = new Date()
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
+
+      filtered = filtered.filter((task) => {
+        const performedAt = new Date(task.performed_at)
+        switch (dateFilter) {
+          case 'today':
+            return performedAt >= startOfToday
+          case 'this_week':
+            return performedAt >= startOfWeek
+          default:
+            return true
+        }
+      })
+    }
+
+    return filtered
+  }, [workTasksData, searchTerm, statusFilter, dateFilter])
 
   const handleRowClick = (row) => {
     navigate(`/worktasks/${row.original.key}`)
@@ -43,52 +110,33 @@ const WorkTaskListPage = () => {
     navigate('/worktasks/create')
   }
 
-  const handleBulkExport = () => {
+  const handleExportCSV = () => {
     try {
-      exportToCSV(workTasks, columns, 'work_tasks')
+      exportToCSV(filteredWorkTasks, columns, 'work_tasks')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
     }
   }
 
-  const handleQuickFilter = (filter) => {
-    setQuickFilter(filter)
+  const handleExportPDF = () => {
+    try {
+      exportToPDF(filteredWorkTasks, columns, 'Work Tasks Report')
+      showToast('PDF exported successfully', 'success')
+    } catch {
+      showToast('Failed to export PDF', 'error')
+    }
   }
-
-  // Apply quick filters
-  const filteredWorkTasks = useMemo(() => {
-    if (!quickFilter) return workTasks
-
-    const now = new Date()
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
-
-    return workTasks.filter((workTask) => {
-      const performedAt = new Date(workTask.performed_at)
-
-      switch (quickFilter) {
-        case 'completed':
-          return workTask.status === 'completed'
-        case 'missed':
-          return workTask.status === 'missed'
-        case 'cancelled':
-          return workTask.status === 'cancelled'
-        case 'today':
-          return performedAt >= startOfToday
-        case 'this_week':
-          return performedAt >= startOfWeek
-        default:
-          return true
-      }
-    })
-  }, [workTasks, quickFilter])
 
   const columns = [
     {
       accessorKey: 'work_order_key',
       header: 'Work Order',
-      cell: ({ row }) => <code className="font-mono text-sm">{row.original.work_order_key}</code>,
+      cell: ({ row }) => (
+        <code className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+          {row.original.work_order_key}
+        </code>
+      ),
       enableSorting: true,
       filterFn: 'includesString',
     },
@@ -129,94 +177,116 @@ const WorkTaskListPage = () => {
     },
     {
       accessorKey: 'photos_count',
-      header: 'Photos Count',
+      header: 'Photos',
       cell: ({ row }) => row.original.photos_count || 0,
       enableSorting: true,
     },
     {
       accessorKey: 'assets_used_count',
-      header: 'Assets Used',
+      header: 'Assets',
       cell: ({ row }) => row.original.assets_used_count || 0,
       enableSorting: true,
     },
   ]
 
-  const emptyState = {
-    title: 'No work tasks found',
-    description: isWorker
-      ? 'You have no work tasks yet.'
-      : 'Get started by logging your first work task.',
-    action: isOwnerOrManager
-      ? {
-          label: '+ Log Work Task',
-          onClick: handleCreateWorkTask,
-        }
-      : null,
-  }
-
-  const bulkActions =
-    selectedRows.length > 0 ? (
-      <div className="flex gap-2">
-        <Button onClick={handleBulkExport} variant="outline" size="sm">
-          Export Selected
-        </Button>
-      </div>
-    ) : null
-
-  const quickFilterButtons = [
-    { key: '', label: 'All' },
-    { key: 'completed', label: 'Completed' },
-    { key: 'missed', label: 'Missed' },
-    { key: 'cancelled', label: 'Cancelled' },
-    { key: 'today', label: 'Today' },
-    { key: 'this_week', label: 'This Week' },
-  ]
+  const hasActiveFilters = searchTerm || statusFilter || dateFilter
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Work Tasks</h1>
-        {isOwnerOrManager && (
-          <Button onClick={handleCreateWorkTask} className="flex items-center gap-2">
-            <PlusIcon className="h-4 w-4" />+ Log Work Task
-          </Button>
-        )}
-      </div>
+    <div data-testid="worktasks-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-9/10 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-600" />
+                Work Tasks
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your work tasks ({filteredWorkTasks.length} of {workTasksData.length || 0}{' '}
+                total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              {isOwnerOrManager && (
+                <Button onClick={handleCreateWorkTask} className="flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Log Work Task
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
-      {/* Quick Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {quickFilterButtons.map((filter) => (
-          <Button
-            key={filter.key}
-            variant={quickFilter === filter.key ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter(filter.key)}
-          >
-            {filter.label}
-          </Button>
-        ))}
+        <DataTable
+          columns={columns}
+          data={filteredWorkTasks}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={true}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by work order, worker, or service...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'missed', label: 'Missed' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ],
+              },
+              {
+                id: 'date',
+                label: 'Date',
+                value: dateFilter,
+                onChange: (e) => setDateFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Dates' },
+                  { value: 'today', label: 'Today' },
+                  { value: 'this_week', label: 'This Week' },
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+          bulkActions={
+            selectedRows.length > 0 ? (
+              <div className="flex gap-2">
+                <Button onClick={handleExportCSV} variant="outline" size="sm">
+                  Export Selected
+                </Button>
+              </div>
+            ) : null
+          }
+          onSelectionChange={setSelectedRows}
+          initialColumnFilters={[
+            {
+              id: 'status',
+              value: '',
+            },
+          ]}
+        />
       </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={filteredWorkTasks}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={true}
-        onExportCSV={() => exportToCSV(filteredWorkTasks, columns, 'work_tasks')}
-        onExportPDF={() => exportToPDF(filteredWorkTasks, columns, 'Work Tasks Report')}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-        initialColumnFilters={[
-          {
-            id: 'status',
-            value: '',
-          },
-        ]}
-      />
     </div>
   )
 }

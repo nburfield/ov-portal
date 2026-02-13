@@ -10,7 +10,7 @@ const DonutChart = ({ data, title, centerLabel }) => {
         {payload.map((entry, index) => (
           <li key={`item-${index}`} className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></span>
-            <span className="text-sm text-gray-700 dark:text-gray-300">{entry.value}</span>
+            <span className="text-sm text-text-primary">{entry.value}</span>
           </li>
         ))}
       </ul>
@@ -40,7 +40,7 @@ const DonutChart = ({ data, title, centerLabel }) => {
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{centerLabel}</p>
+            <p className="text-lg font-semibold text-text-primary">{centerLabel}</p>
           </div>
         </div>
       </div>

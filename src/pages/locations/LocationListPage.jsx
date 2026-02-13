@@ -349,9 +349,9 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="address_1"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Address 1 <span className="text-red-500">*</span>
+            Address 1 <span className="text-danger">*</span>
           </label>
           <Input
             id="address_1"
@@ -366,7 +366,7 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="address_2"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Address 2
           </label>
@@ -377,9 +377,9 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="city"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            City <span className="text-red-500">*</span>
+            City <span className="text-danger">*</span>
           </label>
           <Input
             id="city"
@@ -394,9 +394,9 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="state"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            State <span className="text-red-500">*</span>
+            State <span className="text-danger">*</span>
           </label>
           <Select
             id="state"
@@ -412,9 +412,9 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="zip"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Zip <span className="text-red-500">*</span>
+            Zip <span className="text-danger">*</span>
           </label>
           <Input
             id="zip"
@@ -429,7 +429,7 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="latitude"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Latitude
           </label>
@@ -440,7 +440,7 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="longitude"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Longitude
           </label>
@@ -451,7 +451,7 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="access_notes"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Access Notes
           </label>
@@ -462,9 +462,9 @@ const LocationFormModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"

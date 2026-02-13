@@ -1,33 +1,72 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { userService } from '../../services/user.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import FormActions from '../../components/forms/FormActions'
+import InviteUserModal from '../../components/modals/InviteUserModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import {
-  validateEmail,
-  validatePhone,
-  validatePassword,
-  validateRequired,
-} from '../../utils/validators'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, EyeIcon, PlusIcon, UserIcon } from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
 
 const UserListPage = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const { data, isLoading, refetch } = useApiQuery(userService.getAll)
 
-  const { data: users = [], isLoading, refetch } = useApiQuery(userService.getAll)
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
+    setRoleFilter('')
+  }
+
+  const usersData = useMemo(() => {
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.values)) return data.values
+    return []
+  }, [data])
+
+  const filteredUsers = useMemo(() => {
+    let filtered = usersData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (user) =>
+          user.first_name?.toLowerCase().includes(lowerSearch) ||
+          user.last_name?.toLowerCase().includes(lowerSearch) ||
+          user.email?.toLowerCase().includes(lowerSearch) ||
+          user.user_name?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((user) => user.status === statusFilter)
+    }
+
+    if (roleFilter) {
+      filtered = filtered.filter((user) => user.roles?.includes(roleFilter))
+    }
+
+    return filtered
+  }, [usersData, searchTerm, statusFilter, roleFilter])
 
   const handleRowClick = (row) => {
     navigate(`/users/${row.original.key}`)
@@ -44,17 +83,17 @@ const UserListPage = () => {
   const handleSaveUser = async (userData) => {
     try {
       await userService.create(userData)
-      showToast('User created successfully', 'success')
+      showToast('User invited successfully', 'success')
       refetch()
       handleCloseModal()
     } catch {
-      showToast('Failed to save user', 'error')
+      showToast('Failed to invite user', 'error')
     }
   }
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(users, columns, 'users')
+      exportToCSV(filteredUsers, columns, 'users')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -63,7 +102,7 @@ const UserListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(users, columns, 'Users Report')
+      exportToPDF(filteredUsers, columns, 'Users Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
@@ -72,31 +111,48 @@ const UserListPage = () => {
 
   const columns = [
     {
-      accessorKey: 'first_name',
+      accessorKey: 'name',
       header: 'Name',
-      cell: ({ row }) => `${row.original.first_name} ${row.original.last_name}`,
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium text-gray-900 dark:text-white">
+            {row.original.first_name} {row.original.last_name}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.email}</div>
+        </div>
+      ),
       enableSorting: true,
     },
     {
       accessorKey: 'user_name',
       header: 'Username',
-      cell: ({ row }) => <code className="font-mono text-sm">{row.original.user_name}</code>,
+      cell: ({ row }) => (
+        <code className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+          {row.original.user_name}
+        </code>
+      ),
       enableSorting: true,
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'phone',
-      header: 'Phone',
-      cell: ({ row }) => formatters.formatPhone(row.original.phone),
     },
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <Badge status={row.original.status}>{row.original.status}</Badge>,
+      cell: ({ row }) => {
+        const status = row.original.status
+        const statusColors = {
+          active: 'bg-green-600',
+          inactive: 'bg-yellow-600',
+          archived: 'bg-gray-600',
+        }
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${
+              statusColors[status] || 'bg-gray-600'
+            }`}
+          >
+            {status}
+          </span>
+        )
+      },
       enableSorting: true,
     },
     {
@@ -114,260 +170,139 @@ const UserListPage = () => {
       enableSorting: false,
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'phone',
+      header: 'Phone',
+      cell: ({ row }) => formatters.formatPhone(row.original.phone),
+    },
+    {
+      accessorKey: 'created_dt',
       header: 'Created',
-      cell: ({ row }) => formatters.formatRelativeDate(new Date(row.original.created_at)),
+      cell: ({ row }) =>
+        row.original.created_dt
+          ? formatters.formatDateTime(new Date(row.original.created_dt * 1000))
+          : 'N/A',
       enableSorting: true,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const user = row.original
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/users/${user.key}`)
+            }}
+            className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+        )
+      },
+      enableSorting: false,
     },
   ]
 
-  const emptyState = {
-    title: 'No users found',
-    description: 'Get started by inviting your first user.',
-    action: {
-      label: 'Invite User',
-      onClick: handleCreateUser,
-    },
-  }
+  const hasActiveFilters = searchTerm || statusFilter || roleFilter
+
+  const uniqueRoles = useMemo(() => {
+    const roles = new Set()
+    usersData.forEach((user) => {
+      user.roles?.forEach((role) => roles.add(role))
+    })
+    return Array.from(roles).sort()
+  }, [usersData])
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Users</h1>
-        <Button onClick={handleCreateUser} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
-          Invite User
-        </Button>
-      </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={users}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-      />
-
-      {/* Create/Edit Modal */}
-      {showCreateModal && (
-        <UserFormModal user={null} onSave={handleSaveUser} onClose={handleCloseModal} />
-      )}
-    </div>
-  )
-}
-
-const UserFormModal = ({ user, onSave, onClose }) => {
-  const { showToast } = useToast()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: user
-      ? {
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          user_name: user.user_name || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          status: user.status || 'active',
-        }
-      : {
-          first_name: '',
-          last_name: '',
-          user_name: '',
-          email: '',
-          phone: '',
-          password: '',
-          status: 'active',
-        },
-  })
-
-  const validateField = (value, fieldName, validator) => {
-    const requiredError = validateRequired(value, fieldName)
-    if (requiredError) return requiredError
-
-    if (validator) {
-      return validator(value)
-    }
-    return null
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      showToast('Failed to save user', 'error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const isEdit = !!user
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title={isEdit ? 'Edit User' : 'Invite User'}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* First Name */}
-        <div>
-          <label
-            htmlFor="first_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            First Name <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="first_name"
-            {...register('first_name', {
-              validate: (value) => validateField(value, 'First name'),
-            })}
-            error={errors.first_name?.message}
-          />
-        </div>
-
-        {/* Last Name */}
-        <div>
-          <label
-            htmlFor="last_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="last_name"
-            {...register('last_name', {
-              validate: (value) => validateField(value, 'Last name'),
-            })}
-            error={errors.last_name?.message}
-          />
-        </div>
-
-        {/* Username */}
-        <div>
-          <label
-            htmlFor="user_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Username <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="user_name"
-            {...register('user_name', {
-              validate: (value) => validateField(value, 'Username'),
-            })}
-            error={errors.user_name?.message}
-            disabled={isEdit} // Not editable after creation
-          />
-          {isEdit && (
-            <p className="text-sm text-gray-500 mt-1">Username cannot be changed after creation</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Email <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="email"
-            type="email"
-            {...register('email', {
-              validate: (value) => validateField(value, 'Email', validateEmail),
-            })}
-            error={errors.email?.message}
-          />
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label
-            htmlFor="phone"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Phone
-          </label>
-          <Input
-            id="phone"
-            type="tel"
-            {...register('phone', {
-              validate: (value) => (value ? validatePhone(value) : null),
-            })}
-            error={errors.phone?.message}
-          />
-        </div>
-
-        {/* Password - only for create */}
-        {!isEdit && (
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Password <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                {...register('password', {
-                  validate: (value) => validateField(value, 'Password', validatePassword),
-                })}
-                error={errors.password?.message}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+    <div data-testid="users-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <UserIcon className="h-8 w-8 text-blue-600" />
+                Users
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your users ({filteredUsers.length} of {usersData.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
               >
-                {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
-                )}
-              </button>
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleCreateUser}
+                data-testid="create-user-button"
+                className="flex items-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Invite User
+              </Button>
             </div>
           </div>
-        )}
-
-        {/* Status */}
-        <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Status <span className="text-red-500">*</span>
-          </label>
-          <Select
-            id="status"
-            {...register('status', {
-              validate: (value) => validateField(value, 'Status'),
-            })}
-            error={errors.status?.message}
-            options={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-              { value: 'archived', label: 'Archived' },
-            ]}
-          />
         </div>
 
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
+        <DataTable
+          columns={columns}
+          data={filteredUsers}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={false}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by name, email, or username...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'archived', label: 'Archived' },
+                ],
+              },
+              {
+                id: 'role',
+                label: 'Role',
+                value: roleFilter,
+                onChange: (e) => setRoleFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Roles' },
+                  ...uniqueRoles.map((role) => ({ value: role, label: role })),
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+        />
+
+        {showCreateModal && (
+          <InviteUserModal
+            isOpen={showCreateModal}
+            onClose={handleCloseModal}
+            onSuccess={handleSaveUser}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 

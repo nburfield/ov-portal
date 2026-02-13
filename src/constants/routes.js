@@ -25,6 +25,7 @@ const ROUTES = {
   AUDIT: '/audit',
   PROFILE: '/profile',
   SETTINGS: '/settings',
+  CREATE_BUSINESS: '/create-business',
   ADMIN_BUSINESSES: '/admin/businesses',
   ADMIN_BUSINESS_DETAIL: '/admin/businesses/:key',
   ADMIN_USERS: '/admin/users',

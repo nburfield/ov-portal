@@ -17,7 +17,6 @@ vi.mock('../src/services/auth.service', () => ({
     login: vi.fn(),
     logout: vi.fn(),
     refresh: vi.fn(),
-    getUserRoles: vi.fn(),
     updateProfile: vi.fn(),
   },
 }))
@@ -75,6 +74,7 @@ describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     cleanup()
+    localStorage.clear()
   })
 
   afterEach(() => {
@@ -94,7 +94,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user').textContent).toBe('null')
     expect(screen.getByTestId('isAuthenticated').textContent).toBe('false')
     expect(screen.getByTestId('isLoading').textContent).toBe('false')
-    expect(screen.getByTestId('userRoles').textContent).toBe('{}')
+    expect(screen.getByTestId('userRoles').textContent).toBe('[]')
   })
 
   it('should wire up API interceptors on mount', () => {
@@ -118,11 +118,11 @@ describe('AuthContext', () => {
       last_name: 'User',
       email: 'test@test.com',
     }
-    const mockToken = 'jwt.token.here'
-    const mockRoles = { business1: ['manager'] }
+    const mockRoles = ['owner', 'manager']
+    const mockPayload = { user_key: 'user123', roles: mockRoles }
+    const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(mockPayload))}.signature`
 
     authService.login.mockResolvedValue({ token: mockToken, user: mockUser })
-    authService.getUserRoles.mockResolvedValue(mockRoles)
 
     render(
       <MemoryRouter>
@@ -140,7 +140,6 @@ describe('AuthContext', () => {
         email: 'test@test.com',
         password: 'password',
       })
-      expect(authService.getUserRoles).toHaveBeenCalled()
       expect(screen.getByTestId('token').textContent).toBe(mockToken)
       expect(screen.getByTestId('user').textContent).toBe(JSON.stringify(mockUser))
       expect(screen.getByTestId('isAuthenticated').textContent).toBe('true')
@@ -148,7 +147,6 @@ describe('AuthContext', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
     })
   })
-
   it('should handle login failure', async () => {
     const mockError = new Error('Invalid credentials')
     authService.login.mockRejectedValue(mockError)
@@ -176,9 +174,10 @@ describe('AuthContext', () => {
   })
 
   it('should handle logout', async () => {
-    // First set authenticated state
+    const mockPayload = { user_key: '1', roles: ['owner'] }
+    const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(mockPayload))}.signature`
     authService.login.mockResolvedValue({
-      token: 'token',
+      token: mockToken,
       user: {
         user_key: '1',
         user_name: 'user',
@@ -187,7 +186,6 @@ describe('AuthContext', () => {
         email: 'test@test.com',
       },
     })
-    authService.getUserRoles.mockResolvedValue({})
     authService.logout.mockResolvedValue({})
 
     render(
@@ -198,7 +196,6 @@ describe('AuthContext', () => {
       </MemoryRouter>
     )
 
-    // Login first
     const loginButton = screen.getByTestId('login-btn')
     loginButton.click()
 
@@ -206,7 +203,6 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('isAuthenticated').textContent).toBe('true')
     })
 
-    // Now logout
     const logoutButton = screen.getByTestId('logout-btn')
     logoutButton.click()
 
@@ -220,15 +216,17 @@ describe('AuthContext', () => {
   })
 
   it('should handle profile update', async () => {
-    const updatedUser = {
+    const mockPayload = { user_key: 'user123', roles: ['owner'] }
+    const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(mockPayload))}.signature`
+    const mockUser = {
       user_key: 'user123',
       user_name: 'testuser',
-      first_name: 'John',
+      first_name: 'Test',
       last_name: 'User',
       email: 'test@test.com',
     }
 
-    authService.updateProfile.mockResolvedValue(updatedUser)
+    authService.login.mockResolvedValue({ token: mockToken, user: mockUser })
 
     render(
       <MemoryRouter>
@@ -238,11 +236,18 @@ describe('AuthContext', () => {
       </MemoryRouter>
     )
 
+    const loginButton = screen.getByTestId('login-btn')
+    loginButton.click()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('isAuthenticated').textContent).toBe('true')
+    })
+
     const updateButton = screen.getByTestId('update-btn')
     updateButton.click()
 
     await waitFor(() => {
-      expect(authService.updateProfile).toHaveBeenCalledWith({ first_name: 'John' })
+      expect(screen.getByTestId('user').textContent).toContain('"first_name":"John"')
     })
   })
 

@@ -138,7 +138,7 @@ const InvoiceDetailPage = () => {
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">Invoice</h1>
             <code
-              className="rounded bg-gray-100 px-2 py-1 text-sm cursor-pointer dark:bg-gray-800"
+              className="rounded bg-bg-tertiary px-2 py-1 text-sm cursor-pointer"
               onClick={handleCopyKey}
             >
               {invoice.key}
@@ -304,21 +304,21 @@ const DetailsTab = ({ invoice, isEditable, onUpdate }) => {
           <h3 className="text-lg font-medium mb-4">Invoice Information</h3>
           <dl className="space-y-3">
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Invoice Key</dt>
+              <dt className="text-sm font-medium text-text-tertiary">Invoice Key</dt>
               <dd className="text-sm">{invoice.key}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+              <dt className="text-sm font-medium text-text-tertiary">Status</dt>
               <dd className="text-sm">
                 <Badge status={invoice.status}>{invoice.status}</Badge>
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Customer</dt>
+              <dt className="text-sm font-medium text-text-tertiary">Customer</dt>
               <dd className="text-sm">{invoice.customer_name}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+              <dt className="text-sm font-medium text-text-tertiary">Created</dt>
               <dd className="text-sm">{formatters.formatDateTime(new Date(invoice.created_at))}</dd>
             </div>
           </dl>
@@ -354,7 +354,7 @@ const DetailsTab = ({ invoice, isEditable, onUpdate }) => {
               <div>
                 <label
                   htmlFor="tax"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-text-primary mb-1"
                 >
                   Tax
                 </label>
@@ -370,17 +370,17 @@ const DetailsTab = ({ invoice, isEditable, onUpdate }) => {
           ) : (
             <dl className="space-y-3">
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-sm font-medium text-text-tertiary">
                   Period Start
                 </dt>
                 <dd className="text-sm">{formatters.formatDate(new Date(invoice.period_start))}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Period End</dt>
+                <dt className="text-sm font-medium text-text-tertiary">Period End</dt>
                 <dd className="text-sm">{formatters.formatDate(new Date(invoice.period_end))}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Tax</dt>
+                <dt className="text-sm font-medium text-text-tertiary">Tax</dt>
                 <dd className="text-sm">{formatters.formatCurrency(invoice.tax || 0)}</dd>
               </div>
             </dl>
@@ -392,19 +392,19 @@ const DetailsTab = ({ invoice, isEditable, onUpdate }) => {
       <div className="border-t pt-6">
         <h3 className="text-lg font-medium mb-4">Totals</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Subtotal</dt>
+          <div className="bg-bg-secondary p-4 rounded-lg">
+            <dt className="text-sm font-medium text-text-tertiary">Subtotal</dt>
             <dd className="text-2xl font-bold">
               {formatters.formatCurrency(invoice.subtotal || 0)}
             </dd>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Tax</dt>
+          <div className="bg-bg-secondary p-4 rounded-lg">
+            <dt className="text-sm font-medium text-text-tertiary">Tax</dt>
             <dd className="text-2xl font-bold">{formatters.formatCurrency(invoice.tax || 0)}</dd>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-            <dt className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</dt>
-            <dd className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="bg-accent/10 p-4 rounded-lg">
+            <dt className="text-sm font-medium text-accent">Total</dt>
+            <dd className="text-2xl font-bold text-accent">
               {formatters.formatCurrency(invoice.total || 0)}
             </dd>
           </div>
@@ -564,7 +564,7 @@ const LineItemsTab = ({ invoice, lineItems, isEditable, onUpdate, subtotal, tota
 
       {/* Add Form */}
       {showAddForm && isEditable && (
-        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+        <div className="border rounded-lg p-4 bg-bg-secondary">
           <h4 className="text-md font-medium mb-4">Add Line Item</h4>
           <form onSubmit={handleSubmitAdd(handleAddLineItem)} className="space-y-4">
             <SearchableSelect
@@ -625,35 +625,35 @@ const LineItemsTab = ({ invoice, lineItems, isEditable, onUpdate, subtotal, tota
 
       {/* Line Items Table */}
       <div className="border rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-bg-secondary">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Service
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Price
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Quantity
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Total
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                 Work Task
               </th>
               {isEditable && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                   Actions
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-bg-card divide-y divide-border">
             {lineItems.map((item) => (
               <tr key={item.key}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -703,7 +703,7 @@ const LineItemsTab = ({ invoice, lineItems, isEditable, onUpdate, subtotal, tota
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <a
                     href={`/worktasks/${item.work_task_key}`}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-accent hover:text-accent-hover"
                   >
                     {item.work_task_key}
                   </a>
@@ -749,15 +749,15 @@ const LineItemsTab = ({ invoice, lineItems, isEditable, onUpdate, subtotal, tota
       <div className="border-t pt-4">
         <div className="flex justify-end space-x-8">
           <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Subtotal</div>
+            <div className="text-sm text-text-tertiary">Subtotal</div>
             <div className="text-lg font-medium">{formatters.formatCurrency(subtotal)}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Tax</div>
+            <div className="text-sm text-text-tertiary">Tax</div>
             <div className="text-lg font-medium">{formatters.formatCurrency(invoice.tax || 0)}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total</div>
+            <div className="text-sm text-text-tertiary">Total</div>
             <div className="text-xl font-bold">{formatters.formatCurrency(total)}</div>
           </div>
         </div>
@@ -791,19 +791,19 @@ const PreviewTab = ({ invoice, lineItems, subtotal, total, showToast }) => {
       </div>
 
       {/* Invoice Preview */}
-      <div className="border rounded-lg p-8 bg-white dark:bg-gray-900 print:shadow-none print:border-none">
+      <div className="border rounded-lg p-8 bg-bg-card print:shadow-none print:border-none">
         {/* Header */}
         <div className="border-b pb-6 mb-6">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Invoice</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Invoice #{invoice.key}</p>
+              <h1 className="text-3xl font-bold text-text-primary">Invoice</h1>
+              <p className="text-text-secondary mt-1">Invoice #{invoice.key}</p>
             </div>
             <div className="text-right">
               <Badge status={invoice.status} className="mb-2">
                 {invoice.status}
               </Badge>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="text-sm text-text-secondary">
                 <div>Date: {formatters.formatDate(new Date())}</div>
               </div>
             </div>
@@ -852,10 +852,10 @@ const PreviewTab = ({ invoice, lineItems, subtotal, total, showToast }) => {
             </thead>
             <tbody>
               {lineItems.map((item) => (
-                <tr key={item.key} className="border-b border-gray-100 dark:border-gray-800">
+                <tr key={item.key} className="border-b border-border">
                   <td className="py-3">
                     <div className="font-medium">{item.description}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-text-secondary">
                       Service: {item.service_name}
                     </div>
                   </td>
@@ -889,7 +889,7 @@ const PreviewTab = ({ invoice, lineItems, subtotal, total, showToast }) => {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 pt-6 border-t text-center text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-12 pt-6 border-t text-center text-sm text-text-secondary">
           <p>Thank you for your business!</p>
           <p>Payment is due within 30 days of invoice date.</p>
         </div>

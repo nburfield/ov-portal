@@ -9,7 +9,6 @@ vi.mock('../src/services/auth.service', () => ({
   default: {
     register: vi.fn(),
     login: vi.fn(),
-    getUserRoles: vi.fn(),
   },
 }))
 

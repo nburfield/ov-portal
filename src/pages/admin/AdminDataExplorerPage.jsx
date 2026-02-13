@@ -108,7 +108,7 @@ const AdminDataExplorerPage = () => {
       </div>
 
       {/* Controls */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm space-y-4">
+      <div className="bg-bg-card p-6 rounded-lg shadow-sm space-y-4">
         {/* Object Type Selection */}
         <div>
           <label className="block text-sm font-medium mb-2">Object Type</label>
@@ -177,9 +177,9 @@ const AdminDataExplorerPage = () => {
 
       {/* Results */}
       {results && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+        <div className="bg-bg-card p-6 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Results</h2>
-          <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded text-sm overflow-auto max-h-96">
+          <pre className="bg-bg-tertiary p-4 rounded text-sm overflow-auto max-h-96">
             {JSON.stringify(results, null, 2)}
           </pre>
         </div>

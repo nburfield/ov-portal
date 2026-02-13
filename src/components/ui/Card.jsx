@@ -3,10 +3,10 @@ import { cn } from '../../utils/cn'
 
 const Card = ({ title, description, children, className, headerAction, variant = 'default' }) => {
   const variants = {
-    default: 'bg-bg-card border border-border rounded-xl shadow-sm',
-    elevated: 'bg-bg-card border border-border rounded-xl shadow-lg',
+    default: 'bg-bg-card border border-border/50 rounded-2xl shadow-lg',
+    elevated: 'bg-bg-card border border-border/50 rounded-3xl shadow-xl',
     outline: 'bg-transparent border-2 border-border rounded-xl',
-    glass: 'bg-bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl shadow-sm',
+    glass: 'bg-bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg',
   }
 
   return (

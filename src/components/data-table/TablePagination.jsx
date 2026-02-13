@@ -27,7 +27,7 @@ const TablePagination = ({ table }) => {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-bg-secondary/50">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-text-secondary">
+        <span data-testid="pagination-info" className="text-sm text-text-secondary">
           Showing <span className="font-medium">{showingStart}</span> to{' '}
           <span className="font-medium">{showingEnd}</span> of{' '}
           <span className="font-medium">{totalRows}</span> results
@@ -37,6 +37,7 @@ const TablePagination = ({ table }) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-secondary">Rows per page:</span>
           <Select
+            data-testid="pagination-page-size"
             value={pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             options={[
@@ -61,6 +62,7 @@ const TablePagination = ({ table }) => {
           <Button
             variant="ghost"
             size="sm"
+            data-testid="pagination-prev"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
             className="p-2"
@@ -83,6 +85,7 @@ const TablePagination = ({ table }) => {
           <Button
             variant="ghost"
             size="sm"
+            data-testid="pagination-next"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
             className="p-2"

@@ -99,7 +99,7 @@ const WorkTaskDetailPage = () => {
               <Badge status={workTask.status}>{workTask.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
                 <code className="font-mono">{workTask.key}</code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -148,37 +148,37 @@ const DetailsTab = ({ workTask }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Key
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{workTask.key}</p>
+          <p className="text-sm text-text-primary font-mono">{workTask.key}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Status
           </label>
           <Badge status={workTask.status}>{workTask.status}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Work Order Key
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">
+          <p className="text-sm text-text-primary font-mono">
             {workTask.work_order_key}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Worker
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{workTask.worker_name}</p>
+          <p className="text-sm text-text-primary">{workTask.worker_name}</p>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Service Snapshot (Read-only)
           </label>
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded">
-            <p className="text-sm text-gray-900 dark:text-white">
+          <div className="bg-bg-secondary p-4 rounded">
+            <p className="text-sm text-text-primary">
               {workTask.service_snapshot
                 ? JSON.stringify(workTask.service_snapshot, null, 2)
                 : 'N/A'}
@@ -186,44 +186,44 @@ const DetailsTab = ({ workTask }) => {
           </div>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Price Snapshot (Read-only)
           </label>
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded">
-            <p className="text-sm text-gray-900 dark:text-white">
+          <div className="bg-bg-secondary p-4 rounded">
+            <p className="text-sm text-text-primary">
               {formatters.formatCurrency(workTask.price_snapshot || 0)}
             </p>
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Performed Date
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(new Date(workTask.performed_at))}
           </p>
         </div>
         {(workTask.status === 'missed' || workTask.status === 'cancelled') && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-text-primary mb-1">
               Reason
             </label>
-            <p className="text-sm text-gray-900 dark:text-white">{workTask.reason || 'N/A'}</p>
+            <p className="text-sm text-text-primary">{workTask.reason || 'N/A'}</p>
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Created At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(workTask.created_at)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Updated At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(workTask.updated_at)}
           </p>
         </div>
@@ -249,9 +249,9 @@ const PhotosTab = ({ workTask, onPhotoClick }) => {
       </div>
       {photos.length === 0 ? (
         <div className="text-center py-8">
-          <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No photos</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <PhotoIcon className="mx-auto h-12 w-12 text-text-muted" />
+          <h3 className="mt-2 text-sm font-medium text-text-primary">No photos</h3>
+          <p className="mt-1 text-sm text-text-tertiary">
             No photos have been uploaded for this work task yet.
           </p>
         </div>
@@ -331,7 +331,7 @@ const InvoiceLinkTab = ({ invoice, invoiceLineItem, isLoading }) => {
   if (!invoice || !invoiceLineItem) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">This work task has not been billed yet.</p>
+        <p className="text-text-tertiary">This work task has not been billed yet.</p>
       </div>
     )
   }
@@ -340,35 +340,35 @@ const InvoiceLinkTab = ({ invoice, invoiceLineItem, isLoading }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Invoice Key
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">
+          <p className="text-sm text-text-primary font-mono">
             <button
               onClick={() => navigate(`/invoices/${invoice.key}`)}
-              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              className="text-accent hover:text-accent-hover"
             >
               {invoice.key}
             </button>
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Invoice Status
           </label>
           <Badge status={invoice.status}>{invoice.status}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Invoice Line Item Key
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{invoiceLineItem.key}</p>
+          <p className="text-sm text-text-primary font-mono">{invoiceLineItem.key}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Amount
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatCurrency(invoiceLineItem.amount || 0)}
           </p>
         </div>

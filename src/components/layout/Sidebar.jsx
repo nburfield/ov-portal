@@ -1,241 +1,367 @@
-import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  ShieldCheck,
-  Briefcase,
-  Award,
-  UserCircle,
-  MapPin,
-  ClipboardList,
-  CheckSquare,
-  Truck,
-  FileText,
-  ScrollText,
-  Network,
-  Shield,
-  UsersRound,
-  Activity,
-  Database,
-  ChevronLeft,
-  ChevronRight,
-  HomeIcon,
-} from 'lucide-react'
-import { useBusiness } from '../../hooks/useBusiness'
-import { hasMinRole } from '../../constants/roles'
-import { cn } from '../../utils/cn'
+  Squares2X2Icon,
+  BuildingOffice2Icon,
+  UsersIcon,
+  ShieldCheckIcon,
+  BriefcaseIcon,
+  StarIcon,
+  UserCircleIcon,
+  MapPinIcon,
+  ClipboardDocumentListIcon,
+  ClipboardDocumentCheckIcon,
+  TruckIcon,
+  DocumentTextIcon,
+  DocumentMagnifyingGlassIcon,
+  BuildingStorefrontIcon,
+  ShieldExclamationIcon,
+  UserGroupIcon,
+  ChartBarIcon,
+  ServerIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import { useAuth } from '../../hooks/useAuth.js'
+import { hasMinRole } from '../../constants/roles.js'
+import { cn } from '../../utils/cn.js'
+import packageJson from '../../../package.json'
 
-const navigationGroups = [
+const navigationConfig = [
   {
-    name: 'Main',
+    group: 'Main',
     items: [
-      { icon: HomeIcon, label: 'Dashboard', href: '/dashboard', minRole: 'manager' },
-      { icon: Building2, label: 'Business', href: '/business', minRole: 'owner' },
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: Squares2X2Icon,
+        minRole: 'manager',
+        testId: 'sidebar-link-dashboard',
+      },
+      {
+        name: 'Business',
+        href: '/business',
+        icon: BuildingOffice2Icon,
+        minRole: 'owner',
+        testId: 'sidebar-link-business',
+      },
     ],
   },
   {
-    name: 'Operations',
+    group: 'Operations',
     items: [
-      { icon: Users, label: 'Users', href: '/users', minRole: 'manager' },
-      { icon: ShieldCheck, label: 'Roles', href: '/roles', minRole: 'owner' },
-      { icon: Briefcase, label: 'Services', href: '/services', minRole: 'manager' },
-      { icon: Award, label: 'Certifications', href: '/certifications', minRole: 'manager' },
+      {
+        name: 'Users',
+        href: '/users',
+        icon: UsersIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-users',
+      },
+      {
+        name: 'Roles',
+        href: '/roles',
+        icon: ShieldCheckIcon,
+        minRole: 'owner',
+        testId: 'sidebar-link-roles',
+      },
+      {
+        name: 'Services',
+        href: '/services',
+        icon: BriefcaseIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-services',
+      },
+      {
+        name: 'Certifications',
+        href: '/certifications',
+        icon: StarIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-certifications',
+      },
     ],
   },
   {
-    name: 'Customers',
+    group: 'Customers',
     items: [
-      { icon: UserCircle, label: 'Customers', href: '/customers', minRole: 'manager' },
-      { icon: MapPin, label: 'Locations', href: '/locations', minRole: 'manager' },
+      {
+        name: 'Customers',
+        href: '/customers',
+        icon: UserCircleIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-customers',
+      },
+      {
+        name: 'Locations',
+        href: '/locations',
+        icon: MapPinIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-locations',
+      },
     ],
   },
   {
-    name: 'Work Management',
+    group: 'Work Management',
     items: [
-      { icon: ClipboardList, label: 'Work Orders', href: '/workorders', minRole: 'worker' },
-      { icon: CheckSquare, label: 'Work Tasks', href: '/worktasks', minRole: 'worker' },
+      {
+        name: 'Work Orders',
+        href: '/workorders',
+        icon: ClipboardDocumentListIcon,
+        minRole: 'worker',
+        testId: 'sidebar-link-workorders',
+      },
+      {
+        name: 'Work Tasks',
+        href: '/worktasks',
+        icon: ClipboardDocumentCheckIcon,
+        minRole: 'worker',
+        testId: 'sidebar-link-worktasks',
+      },
     ],
   },
   {
-    name: 'Fleet',
-    items: [{ icon: Truck, label: 'Fleet & Assets', href: '/fleet', minRole: 'manager' }],
-  },
-  {
-    name: 'Billing',
-    items: [{ icon: FileText, label: 'Invoices', href: '/invoices', minRole: 'manager' }],
-  },
-  {
-    name: 'System',
+    group: 'Fleet',
     items: [
-      { icon: ScrollText, label: 'Audit Logs', href: '/audit', minRole: 'owner' },
-      { icon: Network, label: 'Subcontractors', href: '/subcontractors', minRole: 'owner' },
+      {
+        name: 'Fleet & Assets',
+        href: '/fleet',
+        icon: TruckIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-fleet',
+      },
+    ],
+  },
+  {
+    group: 'Billing',
+    items: [
+      {
+        name: 'Invoices',
+        href: '/invoices',
+        icon: DocumentTextIcon,
+        minRole: 'manager',
+        testId: 'sidebar-link-invoices',
+      },
+    ],
+  },
+  {
+    group: 'System',
+    items: [
+      {
+        name: 'Audit Logs',
+        href: '/audit',
+        icon: DocumentMagnifyingGlassIcon,
+        minRole: 'owner',
+        testId: 'sidebar-link-audit',
+      },
+      {
+        name: 'Subcontractors',
+        href: '/subcontractors',
+        icon: BuildingStorefrontIcon,
+        minRole: 'owner',
+        testId: 'sidebar-link-subcontractors',
+      },
+    ],
+  },
+  {
+    group: 'Super Admin',
+    superAdminOnly: true,
+    items: [
+      {
+        name: 'All Businesses',
+        href: '/admin/businesses',
+        icon: ShieldExclamationIcon,
+        minRole: 'super_admin',
+        testId: 'sidebar-link-admin-businesses',
+      },
+      {
+        name: 'All Users',
+        href: '/admin/users',
+        icon: UserGroupIcon,
+        minRole: 'super_admin',
+        testId: 'sidebar-link-admin-users',
+      },
+      {
+        name: 'System Health',
+        href: '/admin/health',
+        icon: ChartBarIcon,
+        minRole: 'super_admin',
+        testId: 'sidebar-link-admin-health',
+      },
+      {
+        name: 'Data Explorer',
+        href: '/admin/data',
+        icon: ServerIcon,
+        minRole: 'super_admin',
+        testId: 'sidebar-link-admin-data',
+      },
     ],
   },
 ]
 
-const superAdminGroup = {
-  name: 'Super Admin',
-  items: [
-    { icon: Shield, label: 'All Businesses', href: '/admin/businesses', minRole: 'super_admin' },
-    { icon: UsersRound, label: 'All Users', href: '/admin/users', minRole: 'super_admin' },
-    { icon: Activity, label: 'System Health', href: '/admin/health', minRole: 'super_admin' },
-    { icon: Database, label: 'Data Explorer', href: '/admin/data', minRole: 'super_admin' },
-  ],
-}
-
-const Sidebar = ({ isCollapsed, onToggle }) => {
+const Sidebar = ({ isCollapsed, onToggle, isMobile = false, onMobileMenuClose }) => {
   const location = useLocation()
-  const { getCurrentRoles } = useBusiness()
-  const userRoles = getCurrentRoles()
-  const [expandedGroups, setExpandedGroups] = useState({})
+  const { userRoles } = useAuth()
+  const [expandedGroups, setExpandedGroups] = useState(new Set(['Main']))
 
-  const isActive = (href) => {
-    return location.pathname === href || location.pathname.startsWith(href + '/')
-  }
+  const userRoleList = useMemo(() => {
+    if (!userRoles || !Array.isArray(userRoles)) return []
+    return userRoles
+  }, [userRoles])
 
-  const hasSuperAdminAccess = hasMinRole(userRoles, 'super_admin')
+  const filteredNavigation = useMemo(() => {
+    return navigationConfig
+      .filter((group) => {
+        if (group.superAdminOnly && !hasMinRole(userRoleList, 'super_admin')) {
+          return false
+        }
+        const visibleItems = group.items.filter((item) => hasMinRole(userRoleList, item.minRole))
+        return visibleItems.length > 0
+      })
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => hasMinRole(userRoleList, item.minRole)),
+      }))
+  }, [userRoleList])
 
-  const filteredGroups = navigationGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => hasMinRole(userRoles, item.minRole)),
-    }))
-    .filter((group) => group.items.length > 0)
-
-  const filteredSuperAdminItems = hasSuperAdminAccess
-    ? superAdminGroup.items.filter((item) => hasMinRole(userRoles, item.minRole))
-    : []
-
-  const toggleGroup = (groupName) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupName]: !prev[groupName],
-    }))
-  }
-
-  const NavItem = ({ item }) => {
-    const active = isActive(item.href)
-    const hasChildren = item.children && item.children.length > 0
-    const isExpanded = expandedGroups[item.label]
-
-    return (
-      <div>
-        <Link
-          to={item.href}
-          className={cn('sidebar-item', active && 'sidebar-item-active')}
-          title={isCollapsed ? item.label : undefined}
-        >
-          <item.icon className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && (
-            <>
-              <span className="flex-1">{item.label}</span>
-              {hasChildren && (
-                <ChevronRightIcon
-                  className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')}
-                />
-              )}
-            </>
-          )}
-        </Link>
-        {!isCollapsed && hasChildren && isExpanded && (
-          <div className="ml-9 mt-1 space-y-0.5">
-            {item.children.map((child) => {
-              const childActive = isActive(child.href)
-              return (
-                <Link
-                  key={child.href}
-                  to={child.href}
-                  className={cn('sidebar-item py-2 text-sm', childActive && 'sidebar-item-active')}
-                >
-                  <span>{child.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  const ChevronRightIcon = ({ className }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
+  const isActiveRoute = useCallback(
+    (href) => {
+      if (href === '/dashboard') {
+        return location.pathname === href
+      }
+      return location.pathname === href || location.pathname.startsWith(href + '/')
+    },
+    [location.pathname]
   )
 
+  const toggleGroup = (groupName) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(groupName)) {
+        next.delete(groupName)
+      } else {
+        next.add(groupName)
+      }
+      return next
+    })
+  }
+
+  const isGroupExpanded = (groupName) => expandedGroups.has(groupName)
+
+  const isAnyChildActive = useCallback(
+    (items) => {
+      return items.some((item) => isActiveRoute(item.href))
+    },
+    [isActiveRoute]
+  )
+
+  useEffect(() => {
+    filteredNavigation.forEach((group) => {
+      if (group.items.some((item) => isActiveRoute(item.href))) {
+        setExpandedGroups((prev) => new Set([...prev, group.group]))
+      }
+    })
+  }, [filteredNavigation, isActiveRoute])
+
   return (
-    <aside
+    <div
+      data-testid="sidebar"
       className={cn(
-        'hidden lg:flex flex-col bg-bg-sidebar border-r border-border transition-all duration-300',
+        'flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
         isCollapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {filteredGroups.map((group) => (
-          <div key={group.name}>
-            {!isCollapsed && (
-              <button
-                onClick={() => toggleGroup(group.name)}
-                className="flex items-center w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                <span className="flex-1 text-left">{group.name}</span>
-              </button>
-            )}
-            <ul className={cn('space-y-0.5', !isCollapsed && 'mt-1')}>
-              {group.items.map((item) => (
-                <li key={item.href}>
-                  <NavItem item={item} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-
-        {filteredSuperAdminItems.length > 0 && (
-          <div className="pt-4 mt-4 border-t border-border">
-            {!isCollapsed && (
-              <div className="px-3 py-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
-                  {superAdminGroup.name}
-                </p>
-              </div>
-            )}
-            <ul className={cn('space-y-0.5', !isCollapsed && 'mt-1')}>
-              {filteredSuperAdminItems.map((item) => {
-                const active = isActive(item.href)
-                return (
-                  <li key={item.href}>
-                    <Link
-                      to={item.href}
-                      className={cn('sidebar-item', active && 'sidebar-item-active')}
-                      title={isCollapsed ? item.label : undefined}
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
+      <div className="flex items-center justify-between p-4 border-none border-gray-200 dark:border-gray-700">
+        {!isCollapsed && (
+          <div className="flex items-center space-x-2">
+            <img src="/onevizn.png" alt="OneVizn Logo" className="h-8 object-contain" />
           </div>
         )}
-      </div>
-
-      <div className="p-3 border-t border-border">
         <button
-          onClick={onToggle}
-          className="sidebar-item w-full text-text-tertiary hover:text-text-primary"
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={isMobile ? onMobileMenuClose : onToggle}
+          data-testid="sidebar-toggle"
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto"
         >
-          <ChevronLeft
-            className={cn('h-5 w-5 transition-transform', isCollapsed && 'rotate-180')}
-          />
-          {!isCollapsed && <span className="text-sm">Collapse</span>}
+          {isMobile ? (
+            <XMarkIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          ) : isCollapsed ? (
+            <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          ) : (
+            <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          )}
         </button>
       </div>
-    </aside>
+
+      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        {filteredNavigation.map((group, groupIndex) => {
+          const isExpanded = isGroupExpanded(group.group)
+          const hasActiveChild = isAnyChildActive(group.items)
+          const showDivider = groupIndex > 0
+
+          const shouldShowItems = isCollapsed || isExpanded || hasActiveChild
+
+          return (
+            <div key={group.group}>
+              {group.superAdminOnly && showDivider && (
+                <div className="my-4 border-t border-gray-200 dark:border-gray-700" />
+              )}
+              {!group.superAdminOnly && showDivider && !isCollapsed && (
+                <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+              )}
+              {!isCollapsed && (
+                <button
+                  onClick={() => toggleGroup(group.group)}
+                  className={cn(
+                    'w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
+                    hasActiveChild
+                      ? 'text-primary-600 dark:text-primary-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  )}
+                >
+                  <span>{group.group}</span>
+                </button>
+              )}
+              {shouldShowItems && (
+                <div className={cn('space-y-0.5', isCollapsed && 'pt-2')}>
+                  {group.items.map((item) => {
+                    const active = isActiveRoute(item.href)
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        data-testid={item.testId}
+                        onClick={() => {
+                          if (isMobile && onMobileMenuClose) {
+                            onMobileMenuClose()
+                          }
+                        }}
+                        className={cn(
+                          'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150',
+                          active
+                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 border-l-2 border-primary-600'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                        )}
+                        title={isCollapsed ? item.name : undefined}
+                      >
+                        <item.icon className={cn('w-5 h-5', isCollapsed ? 'mx-auto' : 'mr-3')} />
+                        {!isCollapsed && <span>{item.name}</span>}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </nav>
+
+      {!isCollapsed && (
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            OneVizn Portal v{packageJson.version}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

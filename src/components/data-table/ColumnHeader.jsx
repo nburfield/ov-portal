@@ -11,6 +11,7 @@ const ColumnHeader = ({ column }) => {
   return (
     <th
       scope="col"
+      data-testid={`column-header-${column.id}`}
       className={cn(
         'group relative select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-tertiary',
         canSort && 'cursor-pointer hover:bg-bg-hover/50 transition-colors'

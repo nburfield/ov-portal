@@ -8,15 +8,18 @@ export function formatCurrency(amount) {
 }
 
 export function formatDate(date) {
-  return format(date, 'MMM d, yyyy')
+  if (!date || isNaN(new Date(date).getTime())) return '—'
+  return format(new Date(date), 'MMM d, yyyy')
 }
 
 export function formatDateTime(date) {
-  return format(date, 'MMM d, yyyy h:mm a')
+  if (!date || isNaN(new Date(date).getTime())) return '—'
+  return format(new Date(date), 'MMM d, yyyy h:mm a')
 }
 
 export function formatRelativeDate(date) {
-  return formatDistanceToNow(date, { addSuffix: true })
+  if (!date || isNaN(new Date(date).getTime())) return '—'
+  return formatDistanceToNow(new Date(date), { addSuffix: true })
 }
 
 export function formatPhone(phone) {

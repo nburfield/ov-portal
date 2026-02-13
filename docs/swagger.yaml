@@ -1,0 +1,3052 @@
+openapi: 3.0.0
+info:
+  title: OV-API
+  description: |
+    Field Service Management API
+    
+    ## Authentication
+    All protected endpoints require a JWT Bearer token in the Authorization header:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    Auth endpoints (register, login) do not require authentication.
+    
+    ## Roles
+    - `owner` - Business owner with full access
+    - `manager` - Manager with elevated access
+    - `worker` - Field worker
+    - `customer` - Customer access
+    
+    ## Common Query Parameters
+    All GET endpoints support filtering via query parameters. See each endpoint for supported filters.
+    
+    ## Common Response Fields
+    - `key` - Unique identifier for the resource
+    - `created_dt` - Creation timestamp (Unix epoch float)
+    - `updated_dt` - Last update timestamp
+    - `created_user` - User who created the resource
+    - `updated_user` - Last user to update
+    - `version` - Resource version for optimistic locking
+    - `status` - Resource status (varies by resource type)
+  version: 1.0.0
+  contact:
+    name: OV-API Support
+
+servers:
+  - url: /api/v2
+    description: Base API v2 URL
+  - url: /api/v1
+    description: Base API v1 URL
+
+tags:
+  - name: Auth
+    description: Authentication and user management
+  - name: Health
+    description: Health check endpoints
+  - name: Users
+    description: User management
+  - name: Businesses
+    description: Business management
+  - name: Customers
+    description: Customer management
+  - name: Locations
+    description: Customer location management
+  - name: Services
+    description: Service offerings
+  - name: Work Orders
+    description: Work order management
+  - name: Work Tasks
+    description: Work task/time entries
+  - name: Invoices
+    description: Invoice management
+  - name: Invoice Line Items
+    description: Invoice line items
+  - name: User Roles
+    description: User role assignments
+  - name: User Services
+    description: User service certifications
+  - name: Fleet Assets
+    description: Fleet and equipment tracking
+  - name: Foobars
+    description: Test/demo resource
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code
+        message:
+          type: string
+          description: Error message
+        description:
+          type: string
+          description: Detailed error description
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+
+    # Common schemas
+    Status:
+      type: string
+      enum: [active, inactive, archived]
+      description: Common status value
+
+    UserStatus:
+      type: string
+      enum: [active, inactive, archived]
+      description: User account status
+
+    # User schema
+    User:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Unique user identifier
+        user_name:
+          type: string
+          description: Unique username for login
+        first_name:
+          type: string
+          description: User's first name
+        last_name:
+          type: string
+          description: User's last name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        phone:
+          type: string
+          description: Optional phone number
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        created_user:
+          type: string
+          description: User who created this record
+        created_dt:
+          type: number
+          format: float
+          description: Creation timestamp
+        updated_user:
+          type: string
+          description: Last user to update
+        updated_dt:
+          type: number
+          format: float
+          description: Last update timestamp
+        version:
+          type: integer
+          description: Record version for optimistic locking
+        object_type:
+          type: string
+          example: user
+
+    UserCreate:
+      type: object
+      required:
+        - user_name
+        - password
+        - first_name
+        - last_name
+        - email
+      properties:
+        user_name:
+          type: string
+          description: Unique username for login (required, unique)
+        password:
+          type: string
+          format: password
+          description: User password (required)
+        first_name:
+          type: string
+          description: User's first name (required)
+        last_name:
+          type: string
+          description: User's last name (required)
+        email:
+          type: string
+          format: email
+          description: User's email address (required, unique)
+        phone:
+          type: string
+          description: Optional phone number
+
+    UserUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: User's first name
+        last_name:
+          type: string
+          description: User's last name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        phone:
+          type: string
+          description: Optional phone number
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+    # Business schema
+    Business:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Unique business identifier
+        name:
+          type: string
+          description: Business name (unique)
+        type:
+          type: string
+          enum: [primary, subcontractor, both]
+          description: Business type
+        parent_business_keys:
+          type: array
+          items:
+            type: string
+          description: Parent business keys (for subcontractors)
+        subcontractor_keys:
+          type: array
+          items:
+            type: string
+          description: Subcontractor business keys
+        contracts:
+          type: array
+          items:
+            type: string
+          description: Associated contract IDs
+        settings:
+          type: object
+          description: Business-specific settings
+        status:
+          $ref: '#/components/schemas/Status'
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: business
+
+    BusinessCreate:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: Business name (unique, required)
+        type:
+          type: string
+          enum: [primary, subcontractor, both]
+          description: Business type (required)
+        parent_business_keys:
+          type: array
+          items:
+            type: string
+          description: Array of parent business keys
+        subcontractor_keys:
+          type: array
+          items:
+            type: string
+          description: Array of subcontractor business keys
+        contracts:
+          type: array
+          items:
+            type: string
+          description: Associated contract IDs
+        settings:
+          type: object
+          description: Business-specific settings dictionary
+        status:
+          $ref: '#/components/schemas/Status'
+
+    BusinessUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [primary, subcontractor, both]
+        parent_business_keys:
+          type: array
+          items:
+            type: string
+        subcontractor_keys:
+          type: array
+          items:
+            type: string
+        contracts:
+          type: array
+          items:
+            type: string
+        settings:
+          type: object
+        status:
+          $ref: '#/components/schemas/Status'
+
+    # Customer schema
+    Customer:
+      type: object
+      properties:
+        key:
+          type: string
+        business_key:
+          type: string
+          description: Associated business key
+        name:
+          type: string
+          description: Customer name
+        contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+              phone:
+                type: string
+          description: Customer contacts list
+        contracts:
+          type: array
+          items:
+            type: string
+          description: Associated contract IDs
+        status:
+          $ref: '#/components/schemas/Status'
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: customer
+
+    CustomerCreate:
+      type: object
+      required:
+        - business_key
+        - name
+      properties:
+        business_key:
+          type: string
+          description: Associated business key (required)
+        name:
+          type: string
+          description: Customer name (required)
+        contacts:
+          type: array
+          items:
+            type: object
+          description: List of contacts (append-only on PATCH)
+        contracts:
+          type: array
+          items:
+            type: string
+          description: List of contract IDs (append-only on PATCH)
+        status:
+          $ref: '#/components/schemas/Status'
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        contacts:
+          type: array
+          items:
+            type: object
+        contracts:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/Status'
+
+    # Location schema
+    Location:
+      type: object
+      properties:
+        key:
+          type: string
+        customer_key:
+          type: string
+          description: Associated customer key
+        address_1:
+          type: string
+          description: Primary address line
+        address_2:
+          type: string
+          description: Secondary address line
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+          description: ZIP/postal code
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        photos:
+          type: array
+          items:
+            type: string
+          description: Photo URLs (append-only)
+        access_notes:
+          type: string
+          description: Notes about accessing the location
+        status:
+          $ref: '#/components/schemas/Status'
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: location
+
+    LocationCreate:
+      type: object
+      required:
+        - customer_key
+        - address_1
+        - city
+        - state
+        - zip
+      properties:
+        customer_key:
+          type: string
+          description: Associated customer key (required)
+        address_1:
+          type: string
+          description: Primary address line (required)
+        address_2:
+          type: string
+          description: Secondary address line (optional)
+        city:
+          type: string
+          description: City (required)
+        state:
+          type: string
+          description: State (required)
+        zip:
+          type: string
+          description: ZIP/postal code (required)
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        photos:
+          type: array
+          items:
+            type: string
+          description: Photo URLs (append-only)
+        access_notes:
+          type: string
+          description: Notes about accessing the location
+        status:
+          $ref: '#/components/schemas/Status'
+
+    LocationUpdate:
+      type: object
+      properties:
+        address_1:
+          type: string
+        address_2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        photos:
+          type: array
+          items:
+            type: string
+        access_notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+
+    # Service schema
+    Service:
+      type: object
+      properties:
+        key:
+          type: string
+        business_key:
+          type: string
+          description: Associated business key
+        name:
+          type: string
+          description: Service name
+        description:
+          type: string
+        default_price:
+          type: number
+          format: float
+          description: Default service price
+        unit:
+          type: string
+          enum: [hour, job, mile, sq_ft]
+          description: Pricing unit
+        status:
+          $ref: '#/components/schemas/Status'
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: service
+
+    ServiceCreate:
+      type: object
+      required:
+        - business_key
+        - name
+        - default_price
+        - unit
+      properties:
+        business_key:
+          type: string
+          description: Associated business key (required)
+        name:
+          type: string
+          description: Service name (required)
+        description:
+          type: string
+          description: Service description
+        default_price:
+          type: number
+          format: float
+          description: Default service price (required)
+        unit:
+          type: string
+          enum: [hour, job, mile, sq_ft]
+          description: Pricing unit (required)
+        status:
+          $ref: '#/components/schemas/Status'
+
+    ServiceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        default_price:
+          type: number
+          format: float
+        unit:
+          type: string
+          enum: [hour, job, mile, sq_ft]
+        status:
+          $ref: '#/components/schemas/Status'
+
+    # Work Order schema
+    WorkOrder:
+      type: object
+      properties:
+        key:
+          type: string
+        owning_business_key:
+          type: string
+          description: Business that owns this work order
+        assigned_business_key:
+          type: string
+          description: Business assigned to perform work
+        customer_key:
+          type: string
+        location_key:
+          type: string
+        service_key:
+          type: string
+        price_snapshot:
+          type: number
+          format: float
+          description: Price at time of work order creation
+        rrule:
+          type: string
+          description: Recurrence rule (iCal format)
+        start_date:
+          type: string
+          description: Start date (ISO 8601)
+        end_date:
+          type: string
+          description: End date (ISO 8601, optional)
+        customer_contact_key:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, cancelled]
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: workorder
+
+    WorkOrderCreate:
+      type: object
+      required:
+        - owning_business_key
+        - assigned_business_key
+        - customer_key
+        - location_key
+        - service_key
+        - price_snapshot
+        - start_date
+      properties:
+        owning_business_key:
+          type: string
+          description: Business that owns this work order (required)
+        assigned_business_key:
+          type: string
+          description: Business assigned to perform work (required)
+        customer_key:
+          type: string
+          description: Associated customer (required)
+        location_key:
+          type: string
+          description: Service location (required)
+        service_key:
+          type: string
+          description: Associated service (required)
+        price_snapshot:
+          type: number
+          format: float
+          description: Price at time of creation (required)
+        rrule:
+          type: string
+          description: Recurrence rule (iCal format, optional)
+        start_date:
+          type: string
+          description: Start date ISO 8601 (required)
+        end_date:
+          type: string
+          description: End date ISO 8601 (optional)
+        customer_contact_key:
+          type: string
+          description: Customer contact key (optional)
+        status:
+          type: string
+          enum: [active, paused, cancelled]
+
+    WorkOrderUpdate:
+      type: object
+      properties:
+        assigned_business_key:
+          type: string
+        location_key:
+          type: string
+        service_key:
+          type: string
+        price_snapshot:
+          type: number
+          format: float
+        rrule:
+          type: string
+        start_date:
+          type: string
+        end_date:
+          type: string
+        customer_contact_key:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, cancelled]
+
+    # Work Task schema
+    WorkTask:
+      type: object
+      properties:
+        key:
+          type: string
+        workorder_key:
+          type: string
+        performed_at:
+          type: number
+          format: float
+          description: Timestamp when work was performed
+        assigned_user_key:
+          type: string
+        service_snapshot:
+          type: object
+          description: Service details at time of task
+        price_snapshot:
+          type: number
+          format: float
+        assets_used:
+          type: array
+          items:
+            type: string
+          description: Fleet asset keys used
+        photos:
+          type: array
+          items:
+            type: string
+          description: Photo URLs (append-only)
+        status:
+          type: string
+          enum: [completed, missed, cancelled]
+        reason:
+          type: string
+          description: Reason for status (especially for missed/cancelled)
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: worktask
+
+    WorkTaskCreate:
+      type: object
+      required:
+        - workorder_key
+        - performed_at
+        - assigned_user_key
+        - service_snapshot
+        - price_snapshot
+        - status
+      properties:
+        workorder_key:
+          type: string
+          description: Associated work order (required)
+        performed_at:
+          type: number
+          format: float
+          description: Unix timestamp of work performance (required)
+        assigned_user_key:
+          type: string
+          description: Assigned worker (required)
+        service_snapshot:
+          type: object
+          description: Service snapshot dict (required)
+        price_snapshot:
+          type: number
+          format: float
+          description: Price at time of task (required)
+        assets_used:
+          type: array
+          items:
+            type: string
+          description: Fleet asset keys used
+        photos:
+          type: array
+          items:
+            type: string
+          description: Photo URLs (append-only)
+        status:
+          type: string
+          enum: [completed, missed, cancelled]
+          description: Task completion status (required)
+        reason:
+          type: string
+          description: Reason for status
+
+    WorkTaskUpdate:
+      type: object
+      properties:
+        performed_at:
+          type: number
+          format: float
+        assigned_user_key:
+          type: string
+        assets_used:
+          type: array
+          items:
+            type: string
+        photos:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [completed, missed, cancelled]
+        reason:
+          type: string
+
+    # Invoice schema
+    Invoice:
+      type: object
+      properties:
+        key:
+          type: string
+        business_key:
+          type: string
+        customer_key:
+          type: string
+        status:
+          type: string
+          enum: [draft, finalized, paid, void]
+        period_start:
+          type: string
+          description: Billing period start date
+        period_end:
+          type: string
+          description: Billing period end date
+        subtotal:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: invoice
+
+    InvoiceCreate:
+      type: object
+      required:
+        - business_key
+        - customer_key
+        - period_start
+        - period_end
+      properties:
+        business_key:
+          type: string
+          description: Associated business (required)
+        customer_key:
+          type: string
+          description: Associated customer (required)
+        status:
+          type: string
+          enum: [draft, finalized, paid, void]
+        period_start:
+          type: string
+          description: Billing period start date (required)
+        period_end:
+          type: string
+          description: Billing period end date (required)
+        subtotal:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [draft, finalized, paid, void]
+        period_start:
+          type: string
+        period_end:
+          type: string
+        subtotal:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    # Invoice Line Item schema
+    InvoiceLineItem:
+      type: object
+      properties:
+        key:
+          type: string
+        invoice_key:
+          type: string
+        worktask_key:
+          type: string
+        description:
+          type: string
+        service_snapshot:
+          type: object
+        price:
+          type: number
+          format: float
+        quantity:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: invoicelineitem
+
+    InvoiceLineItemCreate:
+      type: object
+      required:
+        - invoice_key
+        - worktask_key
+        - description
+        - price
+        - quantity
+        - total
+      properties:
+        invoice_key:
+          type: string
+          description: Associated invoice (required)
+        worktask_key:
+          type: string
+          description: Associated work task (required)
+        description:
+          type: string
+          description: Line item description (required)
+        service_snapshot:
+          type: object
+          description: Service snapshot dict
+        price:
+          type: number
+          format: float
+          description: Unit price (required)
+        quantity:
+          type: number
+          format: float
+          description: Quantity (default 1.0, required)
+        total:
+          type: number
+          format: float
+          description: Total amount (required)
+
+    InvoiceLineItemUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+        service_snapshot:
+          type: object
+        price:
+          type: number
+          format: float
+        quantity:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    # User Role schema
+    UserRole:
+      type: object
+      properties:
+        key:
+          type: string
+        user_key:
+          type: string
+          description: Associated user key
+        business_key:
+          type: string
+          description: Associated business key
+        role:
+          type: string
+          enum: [owner, manager, worker, customer]
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: userrole
+
+    UserRoleCreate:
+      type: object
+      required:
+        - user_key
+        - business_key
+        - role
+      properties:
+        user_key:
+          type: string
+          description: User key (required)
+        business_key:
+          type: string
+          description: Business key (required)
+        role:
+          type: string
+          enum: [owner, manager, worker, customer]
+          description: Role assignment (required)
+
+    UserRoleUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [owner, manager, worker, customer]
+
+    # User Service schema
+    UserService:
+      type: object
+      properties:
+        key:
+          type: string
+        user_key:
+          type: string
+        service_key:
+          type: string
+        certified_at:
+          type: number
+          format: float
+          description: Certification timestamp
+        expires_at:
+          type: number
+          format: float
+          description: Certification expiration
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: userservice
+
+    UserServiceCreate:
+      type: object
+      required:
+        - user_key
+        - service_key
+      properties:
+        user_key:
+          type: string
+          description: User key (required)
+        service_key:
+          type: string
+          description: Service key (required)
+        certified_at:
+          type: number
+          format: float
+        expires_at:
+          type: number
+          format: float
+
+    UserServiceUpdate:
+      type: object
+      properties:
+        certified_at:
+          type: number
+          format: float
+        expires_at:
+          type: number
+          format: float
+
+    # Fleet Asset schema
+    FleetAsset:
+      type: object
+      properties:
+        key:
+          type: string
+        business_key:
+          type: string
+        type:
+          type: string
+          enum: [truck, equipment]
+        identifier:
+          type: string
+          description: Asset identifier (VIN, plate number, etc.)
+        status:
+          type: string
+          enum: [active, out_of_service]
+        mileage:
+          type: integer
+        maintenance:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              description:
+                type: string
+              cost:
+                type: number
+          description: Maintenance records (append-only)
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: fleetasset
+
+    FleetAssetCreate:
+      type: object
+      required:
+        - business_key
+        - type
+        - identifier
+      properties:
+        business_key:
+          type: string
+          description: Associated business (required)
+        type:
+          type: string
+          enum: [truck, equipment]
+          description: Asset type (required)
+        identifier:
+          type: string
+          description: Asset identifier (required)
+        status:
+          type: string
+          enum: [active, out_of_service]
+        mileage:
+          type: integer
+        maintenance:
+          type: array
+          items:
+            type: object
+
+    FleetAssetUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [truck, equipment]
+        identifier:
+          type: string
+        status:
+          type: string
+          enum: [active, out_of_service]
+        mileage:
+          type: integer
+        maintenance:
+          type: array
+          items:
+            type: object
+
+    # Foobar schema (test/demo)
+    Foobar:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+          description: Unique name
+        email:
+          type: string
+          format: email
+          description: Unique email
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, processing, archived]
+        created_user:
+          type: string
+        created_dt:
+          type: number
+          format: float
+        updated_user:
+          type: string
+        updated_dt:
+          type: number
+          format: float
+        version:
+          type: integer
+        object_type:
+          type: string
+          example: foobar
+
+    FoobarCreate:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: Unique name (required)
+        email:
+          type: string
+          format: email
+          description: Unique email (required)
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, processing, archived]
+
+    FoobarUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, processing, archived]
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== AUTH ENDPOINTS ====================
+  /auth/roles:
+    get:
+      tags:
+        - Auth
+      summary: Get available roles
+      description: Returns the list of allowed role values for user assignments
+      responses:
+        '200':
+          description: List of role values
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  enum: [owner, manager, worker, customer]
+                example: ["owner", "manager", "worker", "customer"]
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      description: Creates a new user account and returns a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid request or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Username or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user
+      description: Authenticates user credentials and returns a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_name
+                - password
+              properties:
+                user_name:
+                  type: string
+                  description: Username
+                password:
+                  type: string
+                  format: password
+                  description: User password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh JWT token
+      description: Issues a new JWT token with extended expiration (requires valid non-expired token)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refresh successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Token expired, invalid, or blacklisted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout user
+      description: Invalidates the current JWT token (adds to blacklist)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        '401':
+          description: Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== HEALTH ENDPOINTS ====================
+  /health/flask:
+    get:
+      tags:
+        - Health
+      summary: Flask health check
+      description: Basic health check endpoint to verify Flask application is running
+      responses:
+        '200':
+          description: Flask is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "Flask is running"
+
+  /health/userdata:
+    get:
+      tags:
+        - Health
+      summary: Userdata connection health check
+      description: Verifies userdata connection is valid
+      responses:
+        '200':
+          description: Userdata connection is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: "Connection valid"
+        '400':
+          description: Health check error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== GENERIC CRUD ENDPOINTS ====================
+  # All object types support the following CRUD operations:
+  #   GET /{object_type}      - List with filtering
+  #   GET /{object_type}/{id} - Get single
+  #   POST /{object_type}     - Create
+  #   PATCH /{object_type}/{id} - Update
+  #   DELETE /{object_type}/{id} - Delete
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Retrieves a list of users with optional filtering
+      parameters:
+        - name: user_name
+          in: query
+          schema:
+            type: string
+          description: Filter by exact username (unique index)
+        - name: email
+          in: query
+          schema:
+            type: string
+          description: Filter by exact email (unique index)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      tags:
+        - Users
+      summary: Create user
+      description: Creates a new user account (admin operation, not for self-registration)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User key
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Users
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User key
+      responses:
+        '200':
+          description: User deleted
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /businesses:
+    get:
+      tags:
+        - Businesses
+      summary: List businesses
+      description: Retrieves a list of businesses with optional filtering
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by exact business name (unique index)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of businesses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Business'
+
+    post:
+      tags:
+        - Businesses
+      summary: Create business
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessCreate'
+      responses:
+        '201':
+          description: Business created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /businesses/{id}:
+    get:
+      tags:
+        - Businesses
+      summary: Get business by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Business key
+      responses:
+        '200':
+          description: Business found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '404':
+          description: Business not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Businesses
+      summary: Update business
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Business key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessUpdate'
+      responses:
+        '200':
+          description: Business updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Business not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Businesses
+      summary: Delete business
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Business key
+      responses:
+        '200':
+          description: Business deleted
+        '404':
+          description: Business not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customers:
+    get:
+      tags:
+        - Customers
+      summary: List customers
+      parameters:
+        - name: business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated business key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+
+    post:
+      tags:
+        - Customers
+      summary: Create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /customers/{id}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer key
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    patch:
+      tags:
+        - Customers
+      summary: Update customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer key
+      responses:
+        '200':
+          description: Customer deleted
+
+  /locations:
+    get:
+      tags:
+        - Locations
+      summary: List locations
+      parameters:
+        - name: customer_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated customer key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+
+    post:
+      tags:
+        - Locations
+      summary: Create location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreate'
+      responses:
+        '201':
+          description: Location created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+  /locations/{id}:
+    get:
+      tags:
+        - Locations
+      summary: Get location by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Location key
+      responses:
+        '200':
+          description: Location found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+    patch:
+      tags:
+        - Locations
+      summary: Update location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Location key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdate'
+      responses:
+        '200':
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+    delete:
+      tags:
+        - Locations
+      summary: Delete location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Location key
+      responses:
+        '200':
+          description: Location deleted
+
+  /services:
+    get:
+      tags:
+        - Services
+      summary: List services
+      parameters:
+        - name: business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated business key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, archived]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+
+    post:
+      tags:
+        - Services
+      summary: Create service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCreate'
+      responses:
+        '201':
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+
+  /services/{id}:
+    get:
+      tags:
+        - Services
+      summary: Get service by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Service key
+      responses:
+        '200':
+          description: Service found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+
+    patch:
+      tags:
+        - Services
+      summary: Update service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Service key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceUpdate'
+      responses:
+        '200':
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+
+    delete:
+      tags:
+        - Services
+      summary: Delete service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Service key
+      responses:
+        '200':
+          description: Service deleted
+
+  /workorders:
+    get:
+      tags:
+        - Work Orders
+      summary: List work orders
+      parameters:
+        - name: owning_business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by owning business key (indexed)
+        - name: assigned_business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by assigned business key (indexed)
+        - name: customer_key
+          in: query
+          schema:
+            type: string
+          description: Filter by customer key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, paused, cancelled]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of work orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkOrder'
+
+    post:
+      tags:
+        - Work Orders
+      summary: Create work order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkOrderCreate'
+      responses:
+        '201':
+          description: Work order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+
+  /workorders/{id}:
+    get:
+      tags:
+        - Work Orders
+      summary: Get work order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work order key
+      responses:
+        '200':
+          description: Work order found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+
+    patch:
+      tags:
+        - Work Orders
+      summary: Update work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work order key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkOrderUpdate'
+      responses:
+        '200':
+          description: Work order updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+
+    delete:
+      tags:
+        - Work Orders
+      summary: Delete work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work order key
+      responses:
+        '200':
+          description: Work order deleted
+
+  /worktasks:
+    get:
+      tags:
+        - Work Tasks
+      summary: List work tasks
+      parameters:
+        - name: workorder_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated work order key (indexed)
+        - name: assigned_user_key
+          in: query
+          schema:
+            type: string
+          description: Filter by assigned user key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [completed, missed, cancelled]
+          description: Filter by status
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of work tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkTask'
+
+    post:
+      tags:
+        - Work Tasks
+      summary: Create work task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkTaskCreate'
+      responses:
+        '201':
+          description: Work task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkTask'
+
+  /worktasks/{id}:
+    get:
+      tags:
+        - Work Tasks
+      summary: Get work task by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work task key
+      responses:
+        '200':
+          description: Work task found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkTask'
+
+    patch:
+      tags:
+        - Work Tasks
+      summary: Update work task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work task key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkTaskUpdate'
+      responses:
+        '200':
+          description: Work task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkTask'
+
+    delete:
+      tags:
+        - Work Tasks
+      summary: Delete work task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Work task key
+      responses:
+        '200':
+          description: Work task deleted
+
+  /invoices:
+    get:
+      tags:
+        - Invoices
+      summary: List invoices
+      parameters:
+        - name: business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated business key (indexed)
+        - name: customer_key
+          in: query
+          schema:
+            type: string
+          description: Filter by customer key (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, finalized, paid, void]
+          description: Filter by status (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+
+    post:
+      tags:
+        - Invoices
+      summary: Create invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceCreate'
+      responses:
+        '201':
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  /invoices/{id}:
+    get:
+      tags:
+        - Invoices
+      summary: Get invoice by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice key
+      responses:
+        '200':
+          description: Invoice found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+    patch:
+      tags:
+        - Invoices
+      summary: Update invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceUpdate'
+      responses:
+        '200':
+          description: Invoice updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+    delete:
+      tags:
+        - Invoices
+      summary: Delete invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice key
+      responses:
+        '200':
+          description: Invoice deleted
+
+  /invoicelineitems:
+    get:
+      tags:
+        - Invoice Line Items
+      summary: List invoice line items
+      parameters:
+        - name: invoice_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated invoice key (indexed)
+        - name: worktask_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated work task key (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of invoice line items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvoiceLineItem'
+
+    post:
+      tags:
+        - Invoice Line Items
+      summary: Create invoice line item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceLineItemCreate'
+      responses:
+        '201':
+          description: Invoice line item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceLineItem'
+
+  /invoicelineitems/{id}:
+    get:
+      tags:
+        - Invoice Line Items
+      summary: Get invoice line item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice line item key
+      responses:
+        '200':
+          description: Invoice line item found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceLineItem'
+
+    patch:
+      tags:
+        - Invoice Line Items
+      summary: Update invoice line item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice line item key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceLineItemUpdate'
+      responses:
+        '200':
+          description: Invoice line item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceLineItem'
+
+    delete:
+      tags:
+        - Invoice Line Items
+      summary: Delete invoice line item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Invoice line item key
+      responses:
+        '200':
+          description: Invoice line item deleted
+
+  /userroles:
+    get:
+      tags:
+        - User Roles
+      summary: List user roles
+      parameters:
+        - name: user_key
+          in: query
+          schema:
+            type: string
+          description: Filter by user key (indexed)
+        - name: business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by business key (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of user roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRole'
+
+    post:
+      tags:
+        - User Roles
+      summary: Create user role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleCreate'
+      responses:
+        '201':
+          description: User role created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+
+  /userroles/{id}:
+    get:
+      tags:
+        - User Roles
+      summary: Get user role by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User role key
+      responses:
+        '200':
+          description: User role found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+
+    patch:
+      tags:
+        - User Roles
+      summary: Update user role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User role key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+      responses:
+        '200':
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+
+    delete:
+      tags:
+        - User Roles
+      summary: Delete user role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User role key
+      responses:
+        '200':
+          description: User role deleted
+
+  /userservices:
+    get:
+      tags:
+        - User Services
+      summary: List user services
+      parameters:
+        - name: user_key
+          in: query
+          schema:
+            type: string
+          description: Filter by user key (indexed)
+        - name: service_key
+          in: query
+          schema:
+            type: string
+          description: Filter by service key (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of user services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserService'
+
+    post:
+      tags:
+        - User Services
+      summary: Create user service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserServiceCreate'
+      responses:
+        '201':
+          description: User service created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserService'
+
+  /userservices/{id}:
+    get:
+      tags:
+        - User Services
+      summary: Get user service by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User service key
+      responses:
+        '200':
+          description: User service found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserService'
+
+    patch:
+      tags:
+        - User Services
+      summary: Update user service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User service key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserServiceUpdate'
+      responses:
+        '200':
+          description: User service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserService'
+
+    delete:
+      tags:
+        - User Services
+      summary: Delete user service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User service key
+      responses:
+        '200':
+          description: User service deleted
+
+  /fleetassets:
+    get:
+      tags:
+        - Fleet Assets
+      summary: List fleet assets
+      parameters:
+        - name: business_key
+          in: query
+          schema:
+            type: string
+          description: Filter by associated business key (indexed)
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [truck, equipment]
+          description: Filter by asset type
+        - name: identifier
+          in: query
+          schema:
+            type: string
+          description: Filter by asset identifier (indexed)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, out_of_service]
+          description: Filter by status (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of fleet assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FleetAsset'
+
+    post:
+      tags:
+        - Fleet Assets
+      summary: Create fleet asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FleetAssetCreate'
+      responses:
+        '201':
+          description: Fleet asset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetAsset'
+
+  /fleetassets/{id}:
+    get:
+      tags:
+        - Fleet Assets
+      summary: Get fleet asset by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Fleet asset key
+      responses:
+        '200':
+          description: Fleet asset found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetAsset'
+
+    patch:
+      tags:
+        - Fleet Assets
+      summary: Update fleet asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Fleet asset key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FleetAssetUpdate'
+      responses:
+        '200':
+          description: Fleet asset updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetAsset'
+
+    delete:
+      tags:
+        - Fleet Assets
+      summary: Delete fleet asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Fleet asset key
+      responses:
+        '200':
+          description: Fleet asset deleted
+
+  /foobars:
+    get:
+      tags:
+        - Foobars
+      summary: List foobars
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by exact name (unique index)
+        - name: email
+          in: query
+          schema:
+            type: string
+          description: Filter by exact email (unique index)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, processing, archived]
+          description: Filter by status (indexed)
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: Filter by exact key
+      responses:
+        '200':
+          description: List of foobars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Foobar'
+
+    post:
+      tags:
+        - Foobars
+      summary: Create foobar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoobarCreate'
+      responses:
+        '201':
+          description: Foobar created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foobar'
+
+  /foobars/{id}:
+    get:
+      tags:
+        - Foobars
+      summary: Get foobar by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Foobar key
+      responses:
+        '200':
+          description: Foobar found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foobar'
+
+    patch:
+      tags:
+        - Foobars
+      summary: Update foobar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Foobar key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoobarUpdate'
+      responses:
+        '200':
+          description: Foobar updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foobar'
+
+    delete:
+      tags:
+        - Foobars
+      summary: Delete foobar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Foobar key
+      responses:
+        '200':
+          description: Foobar deleted

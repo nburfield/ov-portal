@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useTheme } from '../../contexts/ThemeContext'
+import { useTheme } from '../../contexts/useTheme'
 import { useToast } from '../../hooks/useToast'
 import { changePassword } from '../../services/auth.service'
 import { validatePassword, validateRequired } from '../../utils/validators'
@@ -66,7 +66,7 @@ const SettingsPage = () => {
       <Card title="Change Password">
         <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
           <Input
-            label="Current Password"
+            data-testid="settings-current-password" label="Current Password"
             type="password"
             {...registerPassword('current_password', {
               validate: (value) => validateField(value, 'Current password'),
@@ -76,7 +76,7 @@ const SettingsPage = () => {
           />
 
           <Input
-            label="New Password"
+            data-testid="settings-new-password" label="New Password"
             type="password"
             {...registerPassword('new_password', {
               validate: (value) => validateField(value, 'New password', validatePassword),
@@ -86,7 +86,7 @@ const SettingsPage = () => {
           />
 
           <Input
-            label="Confirm New Password"
+            data-testid="settings-confirm-password" label="Confirm New Password"
             type="password"
             {...registerPassword('confirm_new_password', {
               validate: (value) => validateField(value, 'Confirm new password'),
@@ -96,7 +96,7 @@ const SettingsPage = () => {
           />
 
           <div className="flex justify-end">
-            <Button type="submit" loading={isPasswordLoading}>
+            <Button data-testid="settings-change-password-submit" type="submit" loading={isPasswordLoading}>
               Change Password
             </Button>
           </div>
@@ -106,12 +106,12 @@ const SettingsPage = () => {
       {/* Theme Preference Section */}
       <Card title="Theme Preference">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-text-secondary">
             Choose your preferred theme. This setting is automatically saved.
           </p>
           <Toggle
             label={`${theme === 'light' ? 'Light' : 'Dark'} Mode`}
-            checked={isDark}
+            data-testid="settings-theme-toggle" checked={isDark}
             onChange={toggleTheme}
           />
         </div>
@@ -120,7 +120,7 @@ const SettingsPage = () => {
       {/* Notification Preferences Section */}
       <Card title="Notification Preferences">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-text-secondary">
             Configure how you want to receive notifications. (Coming soon)
           </p>
           <div className="space-y-3">

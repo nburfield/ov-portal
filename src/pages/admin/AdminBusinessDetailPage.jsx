@@ -157,7 +157,7 @@ const AdminBusinessDetailPage = () => {
           <h1 className="text-2xl font-bold">{business.name}</h1>
           <Badge status={business.status}>{business.status}</Badge>
           <div className="flex items-center space-x-2">
-            <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">
+            <code className="px-2 py-1 bg-bg-tertiary rounded text-sm font-mono">
               {business.key}
             </code>
             <Button variant="ghost" size="sm" onClick={handleCopyKey} className="p-1">
@@ -165,7 +165,7 @@ const AdminBusinessDetailPage = () => {
             </Button>
           </div>
         </div>
-        <div className="text-sm text-gray-500">Admin View - Always Editable</div>
+        <div className="text-sm text-text-tertiary">Admin View - Always Editable</div>
       </div>
 
       {/* Tabs */}
@@ -244,7 +244,7 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           ) : (
-            <p className="text-gray-900 dark:text-gray-100">{business.name}</p>
+            <p className="text-text-primary">{business.name}</p>
           )}
         </div>
 
@@ -284,21 +284,21 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
 
         <div>
           <label className="block text-sm font-medium mb-2">Key</label>
-          <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">
+          <code className="px-2 py-1 bg-bg-tertiary rounded text-sm font-mono">
             {business.key}
           </code>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Created</label>
-          <p className="text-gray-900 dark:text-gray-100">
+          <p className="text-text-primary">
             {formatters.formatDate(business.created_at)}
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Updated</label>
-          <p className="text-gray-900 dark:text-gray-100">
+          <p className="text-text-primary">
             {formatters.formatDate(business.updated_at)}
           </p>
         </div>
@@ -312,7 +312,7 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
             onChange={(settings) => setFormData({ ...formData, settings })}
           />
         ) : (
-          <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-sm overflow-auto">
+          <pre className="bg-bg-tertiary p-4 rounded text-sm overflow-auto">
             {JSON.stringify(business.settings, null, 2)}
           </pre>
         )}
@@ -410,7 +410,7 @@ const SubcontractorsTab = ({ subcontractors, onAdd, onRemove }) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(row.key)}
-                className="text-red-600 hover:text-red-800"
+                className="text-danger hover:text-danger"
               >
                 Remove
               </Button>

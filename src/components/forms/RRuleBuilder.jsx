@@ -121,7 +121,7 @@ const RRuleBuilder = ({ value, onChange }) => {
 
       {options.freq === RRule.WEEKLY && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-text-primary mb-2">
             Days of the week
           </label>
           <div className="flex flex-wrap gap-2">
@@ -175,10 +175,10 @@ const RRuleBuilder = ({ value, onChange }) => {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-text-primary mb-1">
           Preview
         </label>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{preview}</p>
+        <p className="text-sm text-text-secondary">{preview}</p>
       </div>
     </div>
   )

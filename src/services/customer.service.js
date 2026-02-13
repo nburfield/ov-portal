@@ -1,7 +1,7 @@
 import api from './api.js'
 
-export const getAll = async (params = {}) => {
-  const response = await api.get('/api/v2/customers', { params })
+export const getAll = async (params = {}, options = {}) => {
+  const response = await api.get('/api/v2/customers', { params, ...options })
   return response.data
 }
 

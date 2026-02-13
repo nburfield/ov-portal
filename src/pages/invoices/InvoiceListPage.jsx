@@ -99,9 +99,7 @@ const InvoiceListPage = () => {
       accessorKey: 'key',
       header: 'Invoice Key',
       cell: ({ row }) => (
-        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">
-          {row.original.key}
-        </code>
+        <code className="rounded bg-bg-tertiary px-1 py-0.5 text-xs">{row.original.key}</code>
       ),
       enableSorting: true,
       filterFn: 'includesString',
@@ -173,12 +171,13 @@ const InvoiceListPage = () => {
   }
 
   const quickFilters = (
-    <div className="flex gap-2">
+    <div data-testid="filter-status" className="flex gap-2">
       {['Draft', 'Finalized', 'Paid', 'Void', 'Overdue'].map((status) => (
         <Button
           key={status}
           variant={statusFilter === status.toLowerCase() ? 'default' : 'outline'}
           size="sm"
+          data-testid={`filter-${status.toLowerCase()}`}
           onClick={() =>
             setStatusFilter(statusFilter === status.toLowerCase() ? '' : status.toLowerCase())
           }
@@ -202,7 +201,7 @@ const InvoiceListPage = () => {
     ) : null
 
   return (
-    <div className="space-y-6">
+    <div data-testid="invoices-page" className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Invoices</h1>
@@ -296,15 +295,20 @@ const CreateInvoiceSlideOver = ({ customers, onSave, onClose }) => {
   }))
 
   return (
-    <SlideOver isOpen={true} onClose={onClose} title="Create Invoice">
+    <SlideOver
+      isOpen={true}
+      onClose={onClose}
+      data-testid="invoice-slideover"
+      title="Create Invoice"
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Customer */}
         <div>
           <label
             htmlFor="customer_key"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Customer <span className="text-red-500">*</span>
+            Customer <span className="text-danger">*</span>
           </label>
           <Select
             id="customer_key"
@@ -319,6 +323,7 @@ const CreateInvoiceSlideOver = ({ customers, onSave, onClose }) => {
 
         {/* Period Start */}
         <DatePicker
+          data-testid="inv-date-input"
           label="Period Start"
           {...register('period_start', {
             validate: (value) => validateField(value, 'Period Start'),
@@ -329,6 +334,7 @@ const CreateInvoiceSlideOver = ({ customers, onSave, onClose }) => {
 
         {/* Period End */}
         <DatePicker
+          data-testid="inv-due-date-input"
           label="Period End"
           {...register('period_end', {
             validate: (value) => {
@@ -344,10 +350,7 @@ const CreateInvoiceSlideOver = ({ customers, onSave, onClose }) => {
 
         {/* Tax */}
         <div>
-          <label
-            htmlFor="tax"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
+          <label htmlFor="tax" className="block text-sm font-medium text-text-primary mb-1">
             Tax
           </label>
           <Input id="tax" type="number" step="0.01" {...register('tax')} placeholder="0.00" />

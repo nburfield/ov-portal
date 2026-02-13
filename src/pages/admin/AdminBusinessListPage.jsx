@@ -234,9 +234,9 @@ const BusinessFormModal = ({ business, onSave, onClose }) => {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-danger">*</span>
           </label>
           <Input
             id="name"
@@ -251,9 +251,9 @@ const BusinessFormModal = ({ business, onSave, onClose }) => {
         <div>
           <label
             htmlFor="type"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Type <span className="text-red-500">*</span>
+            Type <span className="text-danger">*</span>
           </label>
           <Select
             id="type"
@@ -273,9 +273,9 @@ const BusinessFormModal = ({ business, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"

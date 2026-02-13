@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import BusinessContext from '../contexts/BusinessContext.jsx'
+import { BusinessContext } from '../contexts/BusinessContext.jsx'
 
 export function useBusiness() {
   const context = useContext(BusinessContext)

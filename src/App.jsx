@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { BusinessProvider } from './contexts/BusinessContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
-import { ToastContainer } from 'react-toastify'
+import { Toaster } from 'react-hot-toast'
 import PrivateRoute from './components/layout/PrivateRoute.jsx'
 import RoleRoute from './components/layout/RoleRoute.jsx'
 import PublicRoute from './components/layout/PublicRoute.jsx'
@@ -14,6 +14,7 @@ import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import DashboardPage from './pages/dashboard/DashboardPage.jsx'
 import BusinessPage from './pages/business/BusinessPage.jsx'
+import CreateBusinessPage from './pages/business/CreateBusinessPage.jsx'
 import UserListPage from './pages/users/UserListPage.jsx'
 import UserDetailPage from './pages/users/UserDetailPage.jsx'
 import AdminBusinessListPage from './pages/admin/AdminBusinessListPage.jsx'
@@ -50,7 +51,7 @@ function App() {
         <AuthProvider>
           <BusinessProvider>
             <ThemeProvider>
-              <ToastContainer position="top-right" autoClose={5000} stacked />
+              <Toaster position="bottom-right" />
               <Routes>
                 {/* Public routes */}
                 <Route
@@ -290,6 +291,7 @@ function App() {
                   />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="settings" element={<SettingsPage />} />
+                  <Route path="create-business" element={<CreateBusinessPage />} />
 
                   {/* Super admin routes */}
                   <Route

@@ -1,31 +1,28 @@
-import { toast } from 'react-toastify'
+import toast from 'react-hot-toast'
 
 export const useToast = () => {
   const showSuccess = (msg) => {
-    toast.success('Success', {
-      description: msg,
-      autoClose: 5000,
+    toast.success(msg, {
+      duration: 5000,
     })
   }
 
   const showError = (msg) => {
-    toast.error('Error', {
-      description: msg,
-      autoClose: false,
+    toast.error(msg, {
+      duration: Infinity,
     })
   }
 
   const showWarning = (msg) => {
-    toast.warning('Warning', {
-      description: msg,
-      autoClose: 5000,
+    toast(msg, {
+      duration: 5000,
+      icon: '⚠️',
     })
   }
 
   const showInfo = (msg) => {
-    toast.info('Info', {
-      description: msg,
-      autoClose: 5000,
+    toast(msg, {
+      duration: 5000,
     })
   }
 

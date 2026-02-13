@@ -86,7 +86,7 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
   return (
     <div className="space-y-1">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-text-primary">
           {label}
         </label>
       )}
@@ -95,7 +95,7 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
           'relative border-2 border-dashed rounded-md p-6 text-center cursor-pointer transition-colors',
           isDragOver
             ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-            : 'border-gray-300 dark:border-gray-600',
+            : 'border-border',
           error && 'border-red-500',
           className
         )}
@@ -116,7 +116,7 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
         {!file ? (
           <div>
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12 text-text-muted"
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -129,7 +129,7 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
               />
             </svg>
             <div className="mt-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-text-secondary">
                 Drag and drop a file here, or click to browse
               </p>
             </div>
@@ -143,9 +143,9 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
                 className="mx-auto h-20 w-20 object-cover rounded-md"
               />
             ) : (
-              <div className="text-sm text-gray-900 dark:text-gray-100">
+              <div className="text-sm text-text-primary">
                 <p className="font-medium">{file.name}</p>
-                <p className="text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
+                <p className="text-text-tertiary">{formatFileSize(file.size)}</p>
               </div>
             )}
             <button
@@ -158,14 +158,14 @@ const FileUpload = ({ onFile, accept, maxSize, label, className, ...props }) => 
                   fileInputRef.current.value = ''
                 }
               }}
-              className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+              className="text-sm text-danger hover:text-red-800 dark:hover:text-red-300"
             >
               Remove file
             </button>
           </div>
         )}
       </div>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   )
 }

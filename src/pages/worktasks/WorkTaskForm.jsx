@@ -184,18 +184,18 @@ const WorkTaskForm = () => {
             rules={{ required: 'Performed at is required' }}
             render={({ field }) => (
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Performed At <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-text-primary">
+                  Performed At <span className="text-danger">*</span>
                 </label>
                 <input
                   type="datetime-local"
                   value={field.value}
                   onChange={field.onChange}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                  className="block w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-accent focus:border-accent bg-bg-card text-text-primary"
                   required
                 />
                 {errors.performed_at && (
-                  <p className="text-sm text-red-600 dark:text-red-400">
+                  <p className="text-sm text-danger">
                     {errors.performed_at.message}
                   </p>
                 )}
@@ -263,20 +263,20 @@ const WorkTaskForm = () => {
 
         {/* Read-only snapshots */}
         {selectedWorkOrder && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-bg-secondary rounded-lg">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-text-primary">
                 Service
               </label>
-              <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+              <p className="mt-1 text-sm text-text-primary">
                 {selectedWorkOrder.service_name}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-text-primary">
                 Price
               </label>
-              <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+              <p className="mt-1 text-sm text-text-primary">
                 ${selectedWorkOrder.price}
               </p>
             </div>

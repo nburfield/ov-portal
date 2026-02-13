@@ -1,259 +1,187 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  Bars3Icon,
-  SunIcon,
-  MoonIcon,
-  BellIcon,
-  ChevronDownIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  UserCircleIcon,
-  BuildingOfficeIcon,
-} from '@heroicons/react/24/outline'
-import { useBusiness } from '../../hooks/useBusiness'
-import { useTheme } from '../../contexts/useTheme'
-import { useAuth } from '../../hooks/useAuth'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Menu, Moon, Sun, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { useTheme } from '../../contexts/useTheme.js'
+import { useAuth } from '../../hooks/useAuth.js'
+import { useBusiness } from '../../hooks/useBusiness.js'
 import { cn } from '../../utils/cn'
-import Avatar from '../ui/Avatar'
-import Badge from '../ui/Badge'
-import ROUTES from '../../constants/routes'
+import ROUTES from '../../constants/routes.js'
 
-const Header = ({ onToggleSidebar }) => {
-  const { businesses, activeBusiness, switchBusiness, roles } = useBusiness()
-  const { isDark, toggleTheme } = useTheme()
+const Header = ({ onMenuToggle }) => {
   const { user, logout } = useAuth()
+  const { businesses = [], activeBusiness, switchBusiness } = useBusiness()
+  const { isDark, toggleTheme } = useTheme()
+  const navigate = useNavigate()
+  const dropdownRef = useRef(null)
 
-  const [businessDropdownOpen, setBusinessDropdownOpen] = useState(false)
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-  const [notificationOpen, setNotificationOpen] = useState(false)
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(isDark)
 
-  const businessRef = useRef(null)
-  const userRef = useRef(null)
-  const notificationRef = useRef(null)
+  const safeBusinesses = Array.isArray(businesses) ? businesses : []
+  const hasSingleBusiness = safeBusinesses.length === 1 && activeBusiness
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (businessRef.current && !businessRef.current.contains(e.target)) {
-        setBusinessDropdownOpen(false)
-      }
-      if (userRef.current && !userRef.current.contains(e.target)) {
-        setUserDropdownOpen(false)
-      }
-      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
-        setNotificationOpen(false)
+    setIsDarkMode(isDark)
+  }, [isDark])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsUserDropdownOpen(false)
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
-  const handleBusinessSelect = (businessKey) => {
-    switchBusiness(businessKey)
-    setBusinessDropdownOpen(false)
+  const handleToggleDarkMode = () => {
+    toggleTheme()
+    setIsDarkMode(!isDarkMode)
   }
 
-  const handleLogout = () => {
+  const handleBusinessChange = (e) => {
+    const newBusinessKey = e.target.value || null
+    switchBusiness(newBusinessKey)
+  }
+
+  const toggleUserDropdown = () => {
+    setIsUserDropdownOpen(!isUserDropdownOpen)
+  }
+
+  const handleSettingsClick = () => {
+    navigate(ROUTES.PROFILE)
+    setIsUserDropdownOpen(false)
+  }
+
+  const handleLogoutClick = () => {
     logout()
+    setIsUserDropdownOpen(false)
   }
 
-  const showBusinessSwitcher = businesses.length > 1
-  const userFullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'
-  const currentRoles = roles[activeBusiness?.business_key] || []
+  const handleLogoClick = () => {
+    navigate(ROUTES.DASHBOARD)
+  }
+
+  const displayName = user?.user_name ?? 'User'
+  const displayEmail = user?.email ?? ''
 
   return (
-    <header className="sticky top-0 z-40 h-16 bg-bg-card/80 backdrop-blur-xl border-b border-border px-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors lg:hidden"
-          aria-label="Toggle sidebar"
-        >
-          <Bars3Icon className="h-5 w-5" />
-        </button>
-        <Link
-          to={ROUTES.DASHBOARD}
-          className="flex items-center gap-2 text-xl font-bold text-text-primary"
-        >
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-            <span className="text-white font-bold text-sm">OV</span>
-          </div>
-          <span className="hidden sm:block">OneVizn</span>
-        </Link>
-      </div>
-
-      {showBusinessSwitcher && (
-        <div ref={businessRef} className="hidden md:block relative">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={() => setBusinessDropdownOpen(!businessDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
+            onClick={onMenuToggle}
+            data-testid="sidebar-toggle"
+            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
           >
-            <BuildingOfficeIcon className="h-4 w-4 text-text-tertiary" />
-            <span className="max-w-[150px] truncate">
-              {activeBusiness?.name || 'Select Business'}
-            </span>
-            <ChevronDownIcon
-              className={cn(
-                'h-4 w-4 text-text-tertiary transition-transform',
-                businessDropdownOpen && 'rotate-180'
-              )}
-            />
+            <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
-          {businessDropdownOpen && (
-            <div className="dropdown-menu animate-scale-in">
-              <div className="p-2">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
-                  Businesses
+
+          <button onClick={handleLogoClick} data-testid="header-logo" className="block">
+            {hasSingleBusiness ? (
+              <div className="text-gray-900 dark:text-gray-100 w-full max-w-xs sm:w-64 text-xl font-semibold">
+                {activeBusiness.name}
+              </div>
+            ) : (
+              <div className="relative w-full max-w-xs sm:w-64">
+                <select
+                  value={activeBusiness?.business_key || ''}
+                  onChange={handleBusinessChange}
+                  data-testid="header-business-switcher"
+                  className="appearance-none text-gray-900 dark:text-gray-100 w-full text-xl font-semibold bg-transparent border-0 focus:outline-none focus:ring-0 pr-6 cursor-pointer"
+                >
+                  <option value="">Select a Business</option>
+                  {safeBusinesses.map((business) => (
+                    <option
+                      key={business.business_key}
+                      value={business.business_key}
+                      data-testid={`business-option-${business.business_key}`}
+                    >
+                      {business.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              </div>
+            )}
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleToggleDarkMode}
+            data-testid="header-theme-toggle"
+            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDarkMode ? (
+              <Sun className="w-5 h-5 text-yellow-500" />
+            ) : (
+              <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            )}
+          </button>
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={toggleUserDropdown}
+              data-testid="header-user-menu"
+              className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {displayName}
                 </p>
-                <div className="mt-1 space-y-0.5">
-                  {businesses.map((business) => {
-                    const businessRoles = roles[business.business_key] || []
-                    return (
-                      <button
-                        key={business.business_key}
-                        onClick={() => handleBusinessSelect(business.business_key)}
-                        className={cn(
-                          'dropdown-item w-full',
-                          activeBusiness?.business_key === business.business_key && 'bg-bg-hover'
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-text-primary truncate">{business.name}</p>
-                          <p className="text-xs text-text-muted truncate">
-                            {businessRoles.join(', ')}
-                          </p>
-                        </div>
-                        {activeBusiness?.business_key === business.business_key && (
-                          <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                        )}
-                      </button>
-                    )
-                  })}
+                {displayEmail && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{displayEmail}</p>
+                )}
+              </div>
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200',
+                  isUserDropdownOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            {isUserDropdownOpen && (
+              <div
+                data-testid="header-user-dropdown"
+                className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+              >
+                <div className="py-1">
+                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {displayName}
+                    </p>
+                    {displayEmail && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{displayEmail}</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleSettingsClick}
+                    data-testid="header-profile-link"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    <Settings className="w-4 h-4 mr-3" />
+                    Settings
+                  </button>
+
+                  <button
+                    onClick={handleLogoutClick}
+                    data-testid="header-logout"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Logout
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="flex items-center gap-1">
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors"
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-        </button>
-
-        <div ref={notificationRef} className="relative">
-          <button
-            onClick={() => setNotificationOpen(!notificationOpen)}
-            className={cn(
-              'p-2 rounded-lg transition-colors',
-              notificationOpen
-                ? 'text-text-primary bg-bg-hover'
-                : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
             )}
-            aria-label="Notifications"
-          >
-            <BellIcon className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-danger text-danger-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-              3
-            </span>
-          </button>
-          {notificationOpen && (
-            <div className="dropdown-menu w-80 animate-scale-in">
-              <div className="p-3 border-b border-border">
-                <h3 className="font-semibold text-text-primary">Notifications</h3>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {[
-                  { title: 'New work order assigned', time: '5 min ago', read: false },
-                  { title: 'Invoice #1234 is overdue', time: '1 hour ago', read: false },
-                  { title: 'Task completed successfully', time: '2 hours ago', read: true },
-                ].map((notification, i) => (
-                  <button key={i} className="dropdown-item w-full text-left">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'w-2 h-2 mt-1.5 rounded-full flex-shrink-0',
-                          notification.read ? 'bg-text-muted' : 'bg-accent'
-                        )}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-text-primary">{notification.title}</p>
-                        <p className="text-xs text-text-muted">{notification.time}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="p-2 border-t border-border">
-                <button className="dropdown-item w-full text-accent text-sm">
-                  View all notifications
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div ref={userRef} className="relative ml-1">
-          <button
-            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-            className={cn(
-              'flex items-center gap-2 p-1.5 rounded-lg transition-colors',
-              userDropdownOpen ? 'bg-bg-hover' : 'hover:bg-bg-hover'
-            )}
-          >
-            <Avatar firstName={user?.firstName || 'U'} lastName={user?.lastName || 'U'} size="sm" />
-            <div className="hidden lg:block text-left">
-              <p className="text-sm font-medium text-text-primary max-w-[120px] truncate">
-                {userFullName}
-              </p>
-              <p className="text-xs text-text-muted max-w-[120px] truncate">
-                {currentRoles[0] || 'User'}
-              </p>
-            </div>
-            <ChevronDownIcon
-              className={cn(
-                'hidden lg:block h-4 w-4 text-text-tertiary transition-transform',
-                userDropdownOpen && 'rotate-180'
-              )}
-            />
-          </button>
-          {userDropdownOpen && (
-            <div className="dropdown-menu animate-scale-in">
-              <div className="p-3 border-b border-border">
-                <p className="font-medium text-text-primary">{userFullName}</p>
-                <p className="text-sm text-text-tertiary">{user?.email}</p>
-              </div>
-              <div className="p-2">
-                <Link
-                  to={ROUTES.PROFILE}
-                  className="dropdown-item"
-                  onClick={() => setUserDropdownOpen(false)}
-                >
-                  <UserCircleIcon className="h-4 w-4" />
-                  My Profile
-                </Link>
-                <Link
-                  to={ROUTES.SETTINGS}
-                  className="dropdown-item"
-                  onClick={() => setUserDropdownOpen(false)}
-                >
-                  <Cog6ToothIcon className="h-4 w-4" />
-                  Settings
-                </Link>
-              </div>
-              <div className="p-2 border-t border-border">
-                <button onClick={handleLogout} className="dropdown-item text-danger">
-                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                  Logout
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </header>

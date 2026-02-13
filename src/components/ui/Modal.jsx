@@ -52,19 +52,19 @@ const Modal = ({
   }
 
   const modalContent = (
-    <div className="modal-overlay animate-fade-in" onClick={closeOnOverlay ? onClose : undefined}>
+    <div data-testid="modal-overlay" className="modal-overlay animate-fade-in" onClick={closeOnOverlay ? onClose : undefined}>
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
-        className={cn('modal-content', sizeClasses[size], 'animate-scale-in')}
+        data-testid="modal-container" className={cn('modal-content', sizeClasses[size], 'animate-scale-in')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
           <div>
-            <h2 id={titleId} className="text-lg font-semibold text-text-primary">
+            <h2 data-testid="modal-title" id={titleId} className="text-lg font-semibold text-text-primary">
               {title}
             </h2>
             {description && (
@@ -76,14 +76,14 @@ const Modal = ({
           {showClose && (
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
+              data-testid="modal-close" className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
               aria-label="Close modal"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
           )}
         </div>
-        <div className="modal-body">{children}</div>
+        <div data-testid="modal-body" className="modal-body">{children}</div>
       </div>
     </div>
   )

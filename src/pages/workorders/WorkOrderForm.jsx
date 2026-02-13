@@ -195,7 +195,7 @@ const WorkOrderForm = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div data-testid="work-order-form" className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{isEdit ? 'Edit Work Order' : 'Create Work Order'}</h1>
       </div>
@@ -209,6 +209,7 @@ const WorkOrderForm = () => {
             rules={{ required: 'Customer is required' }}
             render={({ field }) => (
               <SearchableSelect
+                data-testid="wo-customer-select"
                 label="Customer"
                 value={field.value}
                 onChange={field.onChange}
@@ -231,6 +232,7 @@ const WorkOrderForm = () => {
             rules={{ required: 'Location is required' }}
             render={({ field }) => (
               <SearchableSelect
+                data-testid="wo-location-select"
                 label="Location"
                 value={field.value}
                 onChange={field.onChange}
@@ -254,6 +256,7 @@ const WorkOrderForm = () => {
             rules={{ required: 'Service is required' }}
             render={({ field }) => (
               <SearchableSelect
+                data-testid="wo-service-select"
                 label="Service"
                 value={field.value}
                 onChange={field.onChange}
@@ -286,6 +289,7 @@ const WorkOrderForm = () => {
             }}
             render={({ field }) => (
               <Input
+                data-testid="wo-price"
                 label="Price"
                 type="number"
                 step="0.01"
@@ -304,6 +308,7 @@ const WorkOrderForm = () => {
             control={control}
             render={({ field }) => (
               <SearchableSelect
+                data-testid="wo-assigned-business"
                 label="Assigned Business"
                 value={field.value}
                 onChange={field.onChange}
@@ -325,6 +330,7 @@ const WorkOrderForm = () => {
             rules={{ required: 'Status is required' }}
             render={({ field }) => (
               <Select
+                data-testid="wo-status"
                 label="Status"
                 options={statusOptions}
                 value={field.value}
@@ -342,6 +348,7 @@ const WorkOrderForm = () => {
             rules={{ required: 'Start date is required' }}
             render={({ field }) => (
               <DatePicker
+                data-testid="wo-start-date"
                 label="Start Date"
                 value={field.value}
                 onChange={field.onChange}
@@ -357,6 +364,7 @@ const WorkOrderForm = () => {
             control={control}
             render={({ field }) => (
               <DatePicker
+                data-testid="wo-end-date"
                 label="End Date"
                 value={field.value}
                 onChange={field.onChange}
@@ -371,6 +379,7 @@ const WorkOrderForm = () => {
             control={control}
             render={({ field }) => (
               <SearchableSelect
+                data-testid="wo-customer-contact"
                 label="Customer Contact"
                 value={field.value}
                 onChange={field.onChange}
@@ -392,15 +401,18 @@ const WorkOrderForm = () => {
           control={control}
           render={({ field }) => (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-text-primary mb-2">
                 Recurring Schedule (Optional)
               </label>
-              <RRuleBuilder value={field.value} onChange={field.onChange} />
+              <div data-testid="wo-rrule-builder">
+                <RRuleBuilder value={field.value} onChange={field.onChange} />
+              </div>
             </div>
           )}
         />
 
         <FormActions
+          data-testid="wo-submit"
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
           submitLabel={isEdit ? 'Update Work Order' : 'Create Work Order'}

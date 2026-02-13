@@ -171,7 +171,7 @@ const LocationDetailPage = () => {
               <Badge status={location.status}>{location.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
                 <code className="font-mono">{location.key}</code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -253,67 +253,67 @@ const DetailsTab = ({ location }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Address 1
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.address_1}</p>
+          <p className="text-sm text-text-primary">{location.address_1}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Address 2
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.address_2 || 'N/A'}</p>
+          <p className="text-sm text-text-primary">{location.address_2 || 'N/A'}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             City
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.city}</p>
+          <p className="text-sm text-text-primary">{location.city}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             State
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.state}</p>
+          <p className="text-sm text-text-primary">{location.state}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Zip
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.zip}</p>
+          <p className="text-sm text-text-primary">{location.zip}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Status
           </label>
           <Badge status={location.status}>{location.status}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Latitude
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.latitude || 'N/A'}</p>
+          <p className="text-sm text-text-primary">{location.latitude || 'N/A'}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Longitude
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.longitude || 'N/A'}</p>
+          <p className="text-sm text-text-primary">{location.longitude || 'N/A'}</p>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Access Notes
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{location.access_notes || 'N/A'}</p>
+          <p className="text-sm text-text-primary">{location.access_notes || 'N/A'}</p>
         </div>
       </div>
       {location.latitude && location.longitude && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Map Preview
           </label>
-          <div className="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
-            <span className="text-gray-500 dark:text-gray-400">Map preview placeholder</span>
+          <div className="w-full h-64 bg-bg-active rounded-md flex items-center justify-center">
+            <span className="text-text-tertiary">Map preview placeholder</span>
           </div>
         </div>
       )}
@@ -348,7 +348,7 @@ const PhotosTab = ({ location, onUploadPhoto, photos = [], isLoading = false }) 
       </div>
       {photos.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">No photos found</p>
+          <p className="text-text-tertiary">No photos found</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -361,10 +361,10 @@ const PhotosTab = ({ location, onUploadPhoto, photos = [], isLoading = false }) 
                 onClick={() => handleViewPhoto(photo)}
               />
               <p className="mt-2 text-sm font-medium">{photo.filename}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-text-tertiary">
                 {photo.taken_at ? formatters.formatDate(photo.taken_at) : 'N/A'}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{photo.note || 'No note'}</p>
+              <p className="text-sm text-text-secondary">{photo.note || 'No note'}</p>
             </div>
           ))}
         </div>
@@ -467,9 +467,9 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="address_1"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Address 1 <span className="text-red-500">*</span>
+            Address 1 <span className="text-danger">*</span>
           </label>
           <Input
             id="address_1"
@@ -484,7 +484,7 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="address_2"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Address 2
           </label>
@@ -495,9 +495,9 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="city"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            City <span className="text-red-500">*</span>
+            City <span className="text-danger">*</span>
           </label>
           <Input
             id="city"
@@ -512,9 +512,9 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="state"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            State <span className="text-red-500">*</span>
+            State <span className="text-danger">*</span>
           </label>
           <Select
             id="state"
@@ -530,9 +530,9 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="zip"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Zip <span className="text-red-500">*</span>
+            Zip <span className="text-danger">*</span>
           </label>
           <Input
             id="zip"
@@ -547,7 +547,7 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="latitude"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Latitude
           </label>
@@ -558,7 +558,7 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="longitude"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Longitude
           </label>
@@ -569,7 +569,7 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="access_notes"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Access Notes
           </label>
@@ -580,9 +580,9 @@ const EditLocationModal = ({ location, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"
@@ -648,7 +648,7 @@ const UploadPhotoModal = ({ locationKey, onSave, onClose }) => {
         <div>
           <label
             htmlFor="taken_at"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Taken At
           </label>
@@ -659,7 +659,7 @@ const UploadPhotoModal = ({ locationKey, onSave, onClose }) => {
         <div>
           <label
             htmlFor="note"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Note
           </label>

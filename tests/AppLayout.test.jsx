@@ -22,7 +22,6 @@ vi.mock('../src/services/auth.service.js', () => ({
     logout: vi.fn(),
     refresh: vi.fn(),
     updateProfile: vi.fn(),
-    getUserRoles: vi.fn().mockResolvedValue({}),
   },
 }))
 
@@ -92,7 +91,10 @@ Object.defineProperty(window, 'matchMedia', {
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
-  localStorageMock.getItem.mockReturnValue(null)
+  localStorageMock.getItem.mockImplementation((key) => {
+    if (key === 'sidebarCollapsed') return 'true'
+    return null
+  })
 })
 
 afterEach(() => {

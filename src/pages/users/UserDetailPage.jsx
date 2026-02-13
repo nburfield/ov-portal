@@ -9,7 +9,6 @@ import { worktaskService } from '../../services/worktask.service'
 import { useBusiness } from '../../hooks/useBusiness'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
-import { STATUS_COLORS } from '../../constants/statuses'
 import { ROLES } from '../../constants/roles'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -32,7 +31,7 @@ import {
 const UserDetailPage = () => {
   const { key } = useParams()
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { showSuccess, showError } = useToast()
   const { activeBusiness } = useBusiness()
 
   const [activeTab, setActiveTab] = useState('details')
@@ -74,9 +73,9 @@ const UserDetailPage = () => {
   const handleCopyKey = async () => {
     try {
       await navigator.clipboard.writeText(user?.key || '')
-      showToast('User key copied to clipboard', 'success')
+      showSuccess('User key copied to clipboard')
     } catch {
-      showToast('Failed to copy user key', 'error')
+      showError('Failed to copy user key')
     }
   }
 
@@ -91,10 +90,10 @@ const UserDetailPage = () => {
   const handleConfirmDelete = async () => {
     try {
       await userService.remove(key)
-      showToast('User deleted successfully', 'success')
+      showSuccess('User deleted successfully')
       navigate('/users')
     } catch {
-      showToast('Failed to delete user', 'error')
+      showError('Failed to delete user')
     } finally {
       setShowDeleteDialog(false)
     }
@@ -116,11 +115,15 @@ const UserDetailPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div data-testid="user-detail-page" className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            data-testid="back-button"
+            className="flex items-center gap-2"
+          >
             <ArrowLeftIcon className="h-4 w-4" />
             Back to Users
           </Button>
@@ -132,30 +135,40 @@ const UserDetailPage = () => {
               <Badge status={user.status}>{user.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
-                <code className="font-mono">{user.key}</code>
-                <ClipboardDocumentIcon className="h-4 w-4" />
+                <code data-testid="user-detail-key" className="font-mono">
+                  {user.key}
+                </code>
+                <ClipboardDocumentIcon data-testid="copy-key-button" className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleEdit} className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleEdit}
+            data-testid="user-edit-button"
+            className="flex items-center gap-2"
+          >
             <PencilIcon className="h-4 w-4" />
             Edit
           </Button>
-          <Button variant="danger" onClick={handleDelete} className="flex items-center gap-2">
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            data-testid="user-delete-button"
+            className="flex items-center gap-2"
+          >
             <TrashIcon className="h-4 w-4" />
             Delete
           </Button>
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'details' && <DetailsTab user={user} />}
         {activeTab === 'roles' && (
@@ -175,12 +188,10 @@ const UserDetailPage = () => {
         )}
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <EditUserModal
           user={user}
           onSave={async () => {
-            // TODO: Implement save
             await refetchUser()
             setShowEditModal(false)
           }}
@@ -188,7 +199,6 @@ const UserDetailPage = () => {
         />
       )}
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
@@ -199,11 +209,10 @@ const UserDetailPage = () => {
         variant="danger"
       />
 
-      {/* Add Role Modal */}
       {showAddRoleModal && (
         <AddRoleModal
           user={user}
-          existingRoles={userRoles.map((ur) => ur.role)}
+          existingRoles={(Array.isArray(userRoles) ? userRoles : []).map((ur) => ur.role)}
           onSave={async (role) => {
             await userroleService.create({
               user_key: user.key,
@@ -225,58 +234,44 @@ const DetailsTab = ({ user }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            First Name
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.first_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">First Name</label>
+          <p data-testid="user-detail-first-name" className="text-sm text-text-primary">
+            {user.first_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Last Name
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.last_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Last Name</label>
+          <p className="text-sm text-text-primary">{user.last_name}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Username
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{user.user_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Username</label>
+          <p className="text-sm text-text-primary font-mono">{user.user_name}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user.email}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Email</label>
+          <p data-testid="user-detail-email" className="text-sm text-text-primary">
+            {user.email}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Phone
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Phone</label>
+          <p data-testid="user-detail-phone" className="text-sm text-text-primary">
             {user.phone ? formatters.formatPhone(user.phone) : 'N/A'}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Status
-          </label>
-          <Badge status={user.status}>{user.status}</Badge>
+          <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
+          <Badge data-testid="user-detail-status" status={user.status}>
+            {user.status}
+          </Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Created At
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
-            {formatters.formatDateTime(user.created_at)}
-          </p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Created At</label>
+          <p className="text-sm text-text-primary">{formatters.formatDateTime(user.created_at)}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Updated At
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
-            {formatters.formatDateTime(user.updated_at)}
-          </p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Updated At</label>
+          <p className="text-sm text-text-primary">{formatters.formatDateTime(user.updated_at)}</p>
         </div>
       </div>
     </div>
@@ -284,7 +279,7 @@ const DetailsTab = ({ user }) => {
 }
 
 const RolesTab = ({ user, userRoles, isLoading, refetchRoles, onAddRole }) => {
-  const { showToast } = useToast()
+  const { showSuccess, showError } = useToast()
   const [showRemoveDialog, setShowRemoveDialog] = useState(null)
 
   const handleRemoveRole = (userRole) => {
@@ -294,10 +289,10 @@ const RolesTab = ({ user, userRoles, isLoading, refetchRoles, onAddRole }) => {
   const handleConfirmRemove = async () => {
     try {
       await userroleService.remove(showRemoveDialog.key)
-      showToast('Role removed successfully', 'success')
+      showSuccess('Role removed successfully')
       refetchRoles()
     } catch {
-      showToast('Failed to remove role', 'error')
+      showError('Failed to remove role')
     } finally {
       setShowRemoveDialog(null)
     }
@@ -306,27 +301,33 @@ const RolesTab = ({ user, userRoles, isLoading, refetchRoles, onAddRole }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Roles</h3>
-        <Button onClick={onAddRole} className="flex items-center gap-2">
+        <h3 data-testid="tab-roles" className="text-lg font-medium">
+          Roles
+        </h3>
+        <Button
+          onClick={onAddRole}
+          data-testid="add-role-button"
+          className="flex items-center gap-2"
+        >
           <PlusIcon className="h-4 w-4" />
           Add Role
         </Button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {userRoles.map((userRole) => (
-          <div key={userRole.key} className="flex items-center gap-2">
-            <Badge status="active">{userRole.role}</Badge>
-            <Button variant="ghost" size="sm" onClick={() => handleRemoveRole(userRole)}>
-              Remove
-            </Button>
-          </div>
-        ))}
-        {userRoles.length === 0 && !isLoading && (
-          <p className="text-sm text-gray-500">No roles assigned</p>
+      <div data-testid="user-roles-list" className="flex flex-wrap gap-2">
+        {Array.isArray(userRoles) &&
+          userRoles.map((userRole) => (
+            <div key={userRole.key} className="flex items-center gap-2">
+              <Badge status="active">{userRole.role}</Badge>
+              <Button variant="ghost" size="sm" onClick={() => handleRemoveRole(userRole)}>
+                Remove
+              </Button>
+            </div>
+          ))}
+        {(!Array.isArray(userRoles) || userRoles.length === 0) && !isLoading && (
+          <p className="text-sm text-text-tertiary">No roles assigned</p>
         )}
       </div>
 
-      {/* Remove Role Confirmation */}
       <ConfirmDialog
         isOpen={!!showRemoveDialog}
         onClose={() => setShowRemoveDialog(null)}
@@ -360,6 +361,7 @@ const CertificationsTab = ({ certifications, isLoading }) => {
 
   return (
     <DataTable
+      data-testid="tab-certifications"
       columns={columns}
       data={certifications}
       isLoading={isLoading}
@@ -397,6 +399,7 @@ const WorkHistoryTab = ({ workTasks, isLoading }) => {
 
   return (
     <DataTable
+      data-testid="tab-worktasks"
       columns={columns}
       data={workTasks}
       isLoading={isLoading}
@@ -409,7 +412,7 @@ const WorkHistoryTab = ({ workTasks, isLoading }) => {
 }
 
 const EditUserModal = ({ user, onSave, onClose }) => {
-  const { showToast } = useToast()
+  const { showSuccess, showError } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -441,10 +444,10 @@ const EditUserModal = ({ user, onSave, onClose }) => {
     setIsLoading(true)
     try {
       await userService.update(user.key, data)
-      showToast('User updated successfully', 'success')
+      showSuccess('User updated successfully')
       onSave(data)
     } catch {
-      showToast('Failed to update user', 'error')
+      showError('Failed to update user')
     } finally {
       setIsLoading(false)
     }
@@ -453,13 +456,9 @@ const EditUserModal = ({ user, onSave, onClose }) => {
   return (
     <Modal isOpen={true} onClose={onClose} title="Edit User">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* First Name */}
         <div>
-          <label
-            htmlFor="first_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            First Name <span className="text-red-500">*</span>
+          <label htmlFor="first_name" className="block text-sm font-medium text-text-primary mb-1">
+            First Name <span className="text-danger">*</span>
           </label>
           <Input
             id="first_name"
@@ -470,13 +469,9 @@ const EditUserModal = ({ user, onSave, onClose }) => {
           />
         </div>
 
-        {/* Last Name */}
         <div>
-          <label
-            htmlFor="last_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Last Name <span className="text-red-500">*</span>
+          <label htmlFor="last_name" className="block text-sm font-medium text-text-primary mb-1">
+            Last Name <span className="text-danger">*</span>
           </label>
           <Input
             id="last_name"
@@ -487,13 +482,9 @@ const EditUserModal = ({ user, onSave, onClose }) => {
           />
         </div>
 
-        {/* Username */}
         <div>
-          <label
-            htmlFor="user_name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Username <span className="text-red-500">*</span>
+          <label htmlFor="user_name" className="block text-sm font-medium text-text-primary mb-1">
+            Username <span className="text-danger">*</span>
           </label>
           <Input
             id="user_name"
@@ -503,16 +494,14 @@ const EditUserModal = ({ user, onSave, onClose }) => {
             error={errors.user_name?.message}
             disabled
           />
-          <p className="text-sm text-gray-500 mt-1">Username cannot be changed after creation</p>
+          <p className="text-sm text-text-tertiary mt-1">
+            Username cannot be changed after creation
+          </p>
         </div>
 
-        {/* Email */}
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Email <span className="text-red-500">*</span>
+          <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
+            Email <span className="text-danger">*</span>
           </label>
           <Input
             id="email"
@@ -524,12 +513,8 @@ const EditUserModal = ({ user, onSave, onClose }) => {
           />
         </div>
 
-        {/* Phone */}
         <div>
-          <label
-            htmlFor="phone"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
+          <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1">
             Phone
           </label>
           <Input
@@ -542,13 +527,9 @@ const EditUserModal = ({ user, onSave, onClose }) => {
           />
         </div>
 
-        {/* Status */}
         <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Status <span className="text-red-500">*</span>
+          <label htmlFor="status" className="block text-sm font-medium text-text-primary mb-1">
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"
@@ -571,7 +552,7 @@ const EditUserModal = ({ user, onSave, onClose }) => {
 }
 
 const AddRoleModal = ({ user, existingRoles, onSave, onClose }) => {
-  const { showToast } = useToast()
+  const { showSuccess, showError } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState('')
 
@@ -579,16 +560,16 @@ const AddRoleModal = ({ user, existingRoles, onSave, onClose }) => {
 
   const handleSave = async () => {
     if (!selectedRole) {
-      showToast('Please select a role', 'error')
+      showError('Please select a role')
       return
     }
 
     setIsLoading(true)
     try {
       await onSave(selectedRole)
-      showToast('Role added successfully', 'success')
+      showSuccess('Role added successfully')
     } catch {
-      showToast('Failed to add role', 'error')
+      showError('Failed to add role')
     } finally {
       setIsLoading(false)
     }
@@ -602,11 +583,8 @@ const AddRoleModal = ({ user, existingRoles, onSave, onClose }) => {
     >
       <div className="space-y-4">
         <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Role <span className="text-red-500">*</span>
+          <label htmlFor="role" className="block text-sm font-medium text-text-primary mb-1">
+            Role <span className="text-danger">*</span>
           </label>
           <Select
             id="role"

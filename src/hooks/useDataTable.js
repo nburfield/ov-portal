@@ -24,6 +24,7 @@ export function useDataTable({
   const [globalFilter, setGlobalFilter] = useState(initialGlobalFilter)
   const [rowSelection, setRowSelection] = useState({})
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

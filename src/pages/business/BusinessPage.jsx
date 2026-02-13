@@ -43,7 +43,6 @@ const BusinessPage = () => {
 
   useEffect(() => {
     if (business) {
-      // Use setTimeout to avoid synchronous setState in effect
       const timeoutId = setTimeout(() => {
         setFormData({
           name: business.name || '',
@@ -150,14 +149,13 @@ const BusinessPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div data-testid="business-page" className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold">{business.name}</h1>
           <Badge status={business.status}>{business.status}</Badge>
           <div className="flex items-center space-x-2">
-            <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">
+            <code className="px-2 py-1 bg-bg-tertiary rounded text-sm font-mono">
               {business.key}
             </code>
             <Button variant="ghost" size="sm" onClick={handleCopyKey} className="p-1">
@@ -167,10 +165,8 @@ const BusinessPage = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'details' && (
           <DetailsTab
@@ -204,7 +200,6 @@ const BusinessPage = () => {
         {activeTab === 'parents' && <ParentsTab parents={business.parents || []} />}
       </div>
 
-      {/* Modals */}
       <AddContractModal
         isOpen={showAddContractModal}
         onClose={() => setShowAddContractModal(false)}
@@ -225,13 +220,18 @@ const BusinessPage = () => {
   )
 }
 
-// Details Tab Component
 const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave, onCancel }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Business Details</h2>
-        {!isEditing && <Button onClick={onEdit}>Edit</Button>}
+        <h2 data-testid="tab-details" className="text-xl font-semibold">
+          Business Details
+        </h2>
+        {!isEditing && (
+          <Button onClick={onEdit} data-testid="edit-details-button">
+            Edit
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -239,11 +239,12 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
           <label className="block text-sm font-medium mb-2">Name</label>
           {isEditing ? (
             <Input
+              data-testid="business-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           ) : (
-            <p className="text-gray-900 dark:text-gray-100">{business.name}</p>
+            <p className="text-text-primary">{business.name}</p>
           )}
         </div>
 
@@ -251,6 +252,7 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
           <label className="block text-sm font-medium mb-2">Type</label>
           {isEditing ? (
             <Select
+              data-testid="business-type"
               value={formData.type}
               onChange={(value) => setFormData({ ...formData, type: value })}
               options={[
@@ -268,6 +270,7 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
           <label className="block text-sm font-medium mb-2">Status</label>
           {isEditing ? (
             <Select
+              data-testid="business-status"
               value={formData.status}
               onChange={(value) => setFormData({ ...formData, status: value })}
               options={[
@@ -283,23 +286,17 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
 
         <div>
           <label className="block text-sm font-medium mb-2">Key</label>
-          <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">
-            {business.key}
-          </code>
+          <code className="px-2 py-1 bg-bg-tertiary rounded text-sm font-mono">{business.key}</code>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Created</label>
-          <p className="text-gray-900 dark:text-gray-100">
-            {formatters.formatDate(business.created_at)}
-          </p>
+          <p className="text-text-primary">{formatters.formatDate(business.created_at)}</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Updated</label>
-          <p className="text-gray-900 dark:text-gray-100">
-            {formatters.formatDate(business.updated_at)}
-          </p>
+          <p className="text-text-primary">{formatters.formatDate(business.updated_at)}</p>
         </div>
       </div>
 
@@ -311,7 +308,7 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
             onChange={(settings) => setFormData({ ...formData, settings })}
           />
         ) : (
-          <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-sm overflow-auto">
+          <pre className="bg-bg-tertiary p-4 rounded text-sm overflow-auto">
             {JSON.stringify(business.settings, null, 2)}
           </pre>
         )}
@@ -322,13 +319,16 @@ const DetailsTab = ({ business, isEditing, formData, setFormData, onEdit, onSave
   )
 }
 
-// Contracts Tab Component
 const ContractsTab = ({ contracts, onAdd, onUpload, onView }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Contracts</h2>
-        <Button onClick={onAdd}>Add Contract</Button>
+        <h2 data-testid="tab-contracts" className="text-xl font-semibold">
+          Contracts
+        </h2>
+        <Button onClick={onAdd} data-testid="add-contract-button">
+          Add Contract
+        </Button>
       </div>
 
       <DataTable
@@ -373,13 +373,16 @@ const ContractsTab = ({ contracts, onAdd, onUpload, onView }) => {
   )
 }
 
-// Subcontractors Tab Component
 const SubcontractorsTab = ({ subcontractors, onAdd, onRemove }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Subcontractors</h2>
-        <Button onClick={onAdd}>Add Subcontractor</Button>
+        <h2 data-testid="tab-subcontractors" className="text-xl font-semibold">
+          Subcontractors
+        </h2>
+        <Button onClick={onAdd} data-testid="add-subcontractor-button">
+          Add Subcontractor
+        </Button>
       </div>
 
       <DataTable
@@ -409,7 +412,7 @@ const SubcontractorsTab = ({ subcontractors, onAdd, onRemove }) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(row.key)}
-                className="text-red-600 hover:text-red-800"
+                className="text-danger hover:text-danger"
               >
                 Remove
               </Button>
@@ -421,11 +424,12 @@ const SubcontractorsTab = ({ subcontractors, onAdd, onRemove }) => {
   )
 }
 
-// Parents Tab Component
 const ParentsTab = ({ parents }) => {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Parent Businesses</h2>
+      <h2 data-testid="tab-parents" className="text-xl font-semibold">
+        Parent Businesses
+      </h2>
 
       <DataTable
         data={parents}
@@ -452,7 +456,6 @@ const ParentsTab = ({ parents }) => {
   )
 }
 
-// Add Contract Modal
 const AddContractModal = ({ isOpen, onClose, onSubmit, contractToUpload, setContractToUpload }) => {
   const [formData, setFormData] = useState({ name: '', effective_date: '', expires_at: '' })
 
@@ -491,7 +494,6 @@ const AddContractModal = ({ isOpen, onClose, onSubmit, contractToUpload, setCont
   )
 }
 
-// Add Subcontractor Modal
 const AddSubcontractorModal = ({
   isOpen,
   onClose,
@@ -504,7 +506,7 @@ const AddSubcontractorModal = ({
     try {
       const businesses = await businessService.getAll({ search, limit: 20 })
       return businesses
-        .filter((b) => b.key !== businessKey && b.type !== 'primary') // Exclude current business and primaries
+        .filter((b) => b.key !== businessKey && b.type !== 'primary')
         .map((b) => ({ value: b.key, label: b.name }))
     } catch {
       return []

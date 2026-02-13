@@ -53,7 +53,7 @@ const JsonEditor = ({ value = {}, onChange, className }) => {
   }
 
   const inputClasses = cn(
-    'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 text-sm'
+    'block w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-accent focus:border-accent bg-bg-card text-text-primary text-sm'
   )
 
   return (
@@ -79,7 +79,7 @@ const JsonEditor = ({ value = {}, onChange, className }) => {
           <button
             type="button"
             onClick={() => removeEntry(entry.id)}
-            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+            className="p-2 text-danger hover:text-red-800 hover:bg-red-50 rounded-md transition-colors dark:hover:text-red-300 dark:hover:bg-red-900/20"
             data-testid={`delete-button-${index}`}
             aria-label="Delete entry"
           >
@@ -91,7 +91,7 @@ const JsonEditor = ({ value = {}, onChange, className }) => {
       <button
         type="button"
         onClick={addEntry}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
+        className="flex items-center gap-2 px-3 py-2 text-sm text-accent hover:text-accent-hover hover:bg-blue-50 rounded-md transition-colors dark:hover:bg-blue-900/20"
         data-testid="add-field-button"
       >
         <PlusIcon className="h-4 w-4" />

@@ -112,7 +112,7 @@ const ServiceDetailPage = () => {
               <Badge status={service.status}>{service.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
                 <code className="font-mono">{service.key}</code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -177,58 +177,58 @@ const DetailsTab = ({ service }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Name
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{service.name}</p>
+          <p className="text-sm text-text-primary">{service.name}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Description
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {service.description || 'No description'}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Default Price
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatCurrency(service.default_price)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Unit
           </label>
           <Badge status="active">{service.unit}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Status
           </label>
           <Badge status={service.status}>{service.status}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Key
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{service.key}</p>
+          <p className="text-sm text-text-primary font-mono">{service.key}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Created At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(service.created_at)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Updated At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(service.updated_at)}
           </p>
         </div>
@@ -362,9 +362,9 @@ const EditServiceModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-danger">*</span>
           </label>
           <Input
             id="name"
@@ -379,7 +379,7 @@ const EditServiceModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="description"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Description
           </label>
@@ -390,9 +390,9 @@ const EditServiceModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="default_price"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Default Price <span className="text-red-500">*</span>
+            Default Price <span className="text-danger">*</span>
           </label>
           <Input
             id="default_price"
@@ -409,9 +409,9 @@ const EditServiceModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="unit"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Unit <span className="text-red-500">*</span>
+            Unit <span className="text-danger">*</span>
           </label>
           <Select
             id="unit"
@@ -427,9 +427,9 @@ const EditServiceModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"

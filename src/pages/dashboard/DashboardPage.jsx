@@ -89,13 +89,17 @@ const DashboardPage = () => {
     period_end__gte: formatDate(monthStart),
     period_end__lte: formatDate(monthEnd),
   })
-  const revenue = paidInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
+  const revenue = Array.isArray(paidInvoices)
+    ? paidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+    : 0
   const { data: prevPaidInvoices } = useApiQuery(invoiceService.getAll, {
     status: 'paid',
     period_end__gte: formatDate(prevMonthStart),
     period_end__lte: formatDate(prevMonthEnd),
   })
-  const prevRevenue = prevPaidInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
+  const prevRevenue = Array.isArray(prevPaidInvoices)
+    ? prevPaidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+    : 0
   const revenueTrend = prevRevenue ? ((revenue - prevRevenue) / prevRevenue) * 100 : 0
 
   const yearAgo = new Date(now)
@@ -106,7 +110,7 @@ const DashboardPage = () => {
     period_end__lte: formatDate(now),
   })
   const revenueData = useMemo(() => {
-    if (!revenueDataRaw) return []
+    if (!Array.isArray(revenueDataRaw)) return []
     const monthly = {}
     revenueDataRaw.forEach((inv) => {
       const date = new Date(inv.period_end)
@@ -121,7 +125,7 @@ const DashboardPage = () => {
     completed_at__lte: formatDate(monthEnd),
   })
   const taskStatusData = useMemo(() => {
-    if (!tasksThisMonth) return []
+    if (!Array.isArray(tasksThisMonth)) return []
     const statusCount = {}
     tasksThisMonth.forEach((task) => {
       statusCount[task.status] = (statusCount[task.status] || 0) + 1
@@ -143,6 +147,8 @@ const DashboardPage = () => {
     period_end__lt: today,
   })
 
+  const getArray = (data) =>
+    data?.data && Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
   const { data: recentTasks } = useApiQuery(worktaskService.getAll, {
     sort: '-completed_at',
     limit: 5,
@@ -156,9 +162,13 @@ const DashboardPage = () => {
     limit: 5,
   })
 
+  const tasks = getArray(recentTasks)
+  const invoices = getArray(recentInvoices)
+  const customers = getArray(recentCustomers)
+
   const activityFeed = useMemo(() => {
     const activities = []
-    recentTasks?.forEach((task) =>
+    tasks.forEach((task) =>
       activities.push({
         type: 'task',
         description: `Task completed: ${task.name}`,
@@ -167,7 +177,7 @@ const DashboardPage = () => {
         color: 'success',
       })
     )
-    recentInvoices?.forEach((inv) =>
+    invoices.forEach((inv) =>
       activities.push({
         type: 'invoice',
         description: `Invoice ${inv.status}: ${inv.key}`,
@@ -176,7 +186,7 @@ const DashboardPage = () => {
         color: 'warning',
       })
     )
-    recentCustomers?.forEach((cust) =>
+    customers.forEach((cust) =>
       activities.push({
         type: 'customer',
         description: `New customer: ${cust.name}`,
@@ -186,13 +196,13 @@ const DashboardPage = () => {
       })
     )
     return activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10)
-  }, [recentTasks, recentInvoices, recentCustomers])
+  }, [tasks, invoices, customers])
 
   const isLoading = loadingActive || loadingTasks || loadingInvoices || loadingRevenue
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div data-testid="dashboard-loading" className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="surface p-6">
@@ -234,12 +244,14 @@ const DashboardPage = () => {
         <StatCard
           icon={ClipboardDocumentListIcon}
           label="Active Work Orders"
+          data-testid="stat-card-active-work-orders"
           value={activeCount}
           color="accent"
         />
         <StatCard
           icon={ClipboardDocumentCheckIcon}
           label="Tasks This Week"
+          data-testid="stat-card-tasks-this-week"
           value={taskCount}
           trend={{ isPositive: taskTrend >= 0, value: Math.abs(taskTrend).toFixed(1) }}
           trendLabel="vs last week"
@@ -248,6 +260,7 @@ const DashboardPage = () => {
         <StatCard
           icon={DocumentTextIcon}
           label="Open Invoices"
+          data-testid="stat-card-open-invoices"
           value={openCount}
           trend={{ isPositive: openTrend >= 0, value: Math.abs(openTrend).toFixed(1) }}
           trendLabel="vs last month"
@@ -256,6 +269,7 @@ const DashboardPage = () => {
         <StatCard
           icon={CurrencyDollarIcon}
           label="Revenue This Month"
+          data-testid="stat-card-revenue-this-month"
           value={`$${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           trend={{ isPositive: revenueTrend >= 0, value: Math.abs(revenueTrend).toFixed(1) }}
           trendLabel="vs last month"
@@ -264,7 +278,7 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card data-testid="dashboard-revenue-chart" className="lg:col-span-2">
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
               <h3 className="font-semibold text-text-primary">Revenue Overview</h3>
@@ -276,7 +290,7 @@ const DashboardPage = () => {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card data-testid="dashboard-task-chart">
           <div className="px-6 py-4 border-b border-border">
             <h3 className="font-semibold text-text-primary">Task Status</h3>
             <p className="text-sm text-text-tertiary">This month</p>
@@ -291,10 +305,12 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card data-testid="dashboard-task-chart">
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
-              <h3 className="font-semibold text-text-primary">Upcoming Work Orders</h3>
+              <h3 className="font-semibold text-text-primary">
+                <span data-testid="dashboard-upcoming-workorders">Upcoming Work Orders</span>
+              </h3>
               <p className="text-sm text-text-tertiary">Next scheduled work orders</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.WORK_ORDERS)}>
@@ -326,10 +342,12 @@ const DashboardPage = () => {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card data-testid="dashboard-task-chart">
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
-              <h3 className="font-semibold text-text-primary">Recent Activity</h3>
+              <h3 className="font-semibold text-text-primary">
+                <span data-testid="dashboard-activity-feed">Recent Activity</span>
+              </h3>
               <p className="text-sm text-text-tertiary">Latest updates from your system</p>
             </div>
           </div>
@@ -366,7 +384,9 @@ const DashboardPage = () => {
           <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-warning-light/30 dark:bg-warning-muted/20">
             <BellIcon className="h-5 w-5 text-warning" />
             <div>
-              <h3 className="font-semibold text-warning">Attention Required</h3>
+              <h3 className="font-semibold text-warning">
+                <span data-testid="dashboard-overdue-alert">Attention Required</span>
+              </h3>
               <p className="text-sm text-text-secondary">
                 You have {overdueInvoices.length} overdue invoices
               </p>

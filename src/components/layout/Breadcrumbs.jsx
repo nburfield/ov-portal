@@ -11,7 +11,7 @@ const Breadcrumbs = ({ items }) => {
             <li key={index} className="inline-flex items-center">
               {index > 0 && (
                 <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
+                  className="w-3 h-3 text-text-muted mx-1"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -27,13 +27,13 @@ const Breadcrumbs = ({ items }) => {
                 </svg>
               )}
               {isLast ? (
-                <span className="text-sm font-medium text-gray-500 md:text-base dark:text-gray-400">
+                <span className="text-sm font-medium text-text-tertiary md:text-base">
                   {item.label}
                 </span>
               ) : (
                 <Link
                   to={item.to}
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600 md:text-base dark:text-gray-400 dark:hover:text-white"
+                  className="text-sm font-medium text-text-primary hover:text-accent md:text-base"
                 >
                   {item.label}
                 </Link>

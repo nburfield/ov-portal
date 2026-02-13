@@ -1,13 +1,13 @@
 export default function FormField({ label, error, required, children, htmlFor }) {
   return (
     <div className="mb-4">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-text-primary mb-1">
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-danger">*</span>}
       </label>
       {children}
       {error && (
-        <p className="text-red-500 text-sm mt-1" aria-live="polite">
+        <p className="text-danger text-sm mt-1" aria-live="polite">
           {error}
         </p>
       )}

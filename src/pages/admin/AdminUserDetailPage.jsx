@@ -67,7 +67,7 @@ const AdminUserDetailPage = () => {
               <Badge status={user.status}>{user.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
                 <code className="font-mono">{user.key}</code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -75,7 +75,7 @@ const AdminUserDetailPage = () => {
             </div>
           </div>
         </div>
-        <div className="text-sm text-gray-500">Super Admin View</div>
+        <div className="text-sm text-text-tertiary">Super Admin View</div>
       </div>
 
       {/* Tabs */}
@@ -102,29 +102,29 @@ const DetailsTab = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium mb-2">First Name</label>
-          <p className="text-gray-900 dark:text-gray-100">{user.first_name}</p>
+          <p className="text-text-primary">{user.first_name}</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Last Name</label>
-          <p className="text-gray-900 dark:text-gray-100">{user.last_name}</p>
+          <p className="text-text-primary">{user.last_name}</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Username</label>
-          <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">
+          <code className="px-2 py-1 bg-bg-tertiary rounded text-sm font-mono">
             {user.user_name}
           </code>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Email</label>
-          <p className="text-gray-900 dark:text-gray-100">{user.email}</p>
+          <p className="text-text-primary">{user.email}</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Phone</label>
-          <p className="text-gray-900 dark:text-gray-100">
+          <p className="text-text-primary">
             {user.phone ? formatters.formatPhone(user.phone) : 'N/A'}
           </p>
         </div>
@@ -136,14 +136,14 @@ const DetailsTab = ({ user }) => {
 
         <div>
           <label className="block text-sm font-medium mb-2">Created</label>
-          <p className="text-gray-900 dark:text-gray-100">
+          <p className="text-text-primary">
             {formatters.formatDate(user.created_at)}
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Updated</label>
-          <p className="text-gray-900 dark:text-gray-100">
+          <p className="text-text-primary">
             {formatters.formatDate(user.updated_at)}
           </p>
         </div>

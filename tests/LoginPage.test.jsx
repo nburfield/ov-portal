@@ -9,7 +9,6 @@ import LoginPage from '../src/pages/auth/LoginPage'
 vi.mock('../src/services/auth.service', () => ({
   default: {
     login: vi.fn(),
-    getUserRoles: vi.fn(),
   },
 }))
 
@@ -73,7 +72,6 @@ describe('LoginPage', () => {
     const mockLogin = vi.fn().mockResolvedValue({})
     const authService = await import('../src/services/auth.service')
     authService.default.login = mockLogin
-    authService.default.getUserRoles = vi.fn().mockResolvedValue({})
 
     renderLoginPage()
 

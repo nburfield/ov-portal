@@ -20,7 +20,7 @@ const EmptyState = ({
   }
 
   return (
-    <div className={cn('empty-state py-12', className)}>
+    <div className={cn('empty-state py-12 flex flex-col items-center text-center', className)}>
       {Icon && (
         <div className={cn('empty-state-icon', sizes[size].icon)}>
           <Icon className="w-full h-full" />
@@ -31,7 +31,7 @@ const EmptyState = ({
         <p className={cn('empty-state-description', sizes[size].desc)}>{description}</p>
       )}
       {(actionLabel || secondaryActionLabel) && (
-        <div className="flex items-center gap-3 mt-6">
+        <div className="flex items-center justify-center gap-3 mt-6">
           {actionLabel && onAction && (
             <Button variant="primary" onClick={onAction}>
               {actionLabel}

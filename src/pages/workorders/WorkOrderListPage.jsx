@@ -226,7 +226,7 @@ const WorkOrderListPage = () => {
   ]
 
   return (
-    <div className="space-y-6">
+    <div data-testid="work-orders-page" className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Work Orders</h1>
@@ -244,6 +244,7 @@ const WorkOrderListPage = () => {
             key={filter.key}
             variant={quickFilter === filter.key ? 'default' : 'outline'}
             size="sm"
+            data-testid={filter.key ? `quick-filter-${filter.key}` : 'quick-filter-all'}
             onClick={() => handleQuickFilter(filter.key)}
           >
             {filter.label}

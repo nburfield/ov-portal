@@ -259,9 +259,9 @@ const AssignRoleModal = ({ activeBusiness, onSave, onClose }) => {
         <div>
           <label
             htmlFor="role"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Role <span className="text-red-500">*</span>
+            Role <span className="text-danger">*</span>
           </label>
           <Select
             id="role"

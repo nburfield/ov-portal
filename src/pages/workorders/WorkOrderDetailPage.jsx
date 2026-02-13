@@ -89,11 +89,16 @@ const WorkOrderDetailPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div data-testid="wo-detail-page" className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            data-testid="back-button"
+            className="flex items-center gap-2"
+          >
             <ArrowLeftIcon className="h-4 w-4" />
             Back to Work Orders
           </Button>
@@ -103,25 +108,40 @@ const WorkOrderDetailPage = () => {
               <Badge status={workOrder.status}>{workOrder.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                data-testid="wo-copy-key"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
-                <code className="font-mono">{workOrder.key}</code>
+                <code data-testid="wo-detail-key" className="font-mono">
+                  {workOrder.key}
+                </code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleEdit} className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleEdit}
+            data-testid="wo-edit-button"
+            className="flex items-center gap-2"
+          >
             <PencilIcon className="h-4 w-4" />
             Edit
           </Button>
-          <Button variant="danger" onClick={handleDelete} className="flex items-center gap-2">
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            data-testid="wo-delete-button"
+            className="flex items-center gap-2"
+          >
             <TrashIcon className="h-4 w-4" />
             Delete
           </Button>
         </div>
       </div>
+
+      {/* Tabs */}
 
       {/* Tabs */}
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
@@ -161,96 +181,82 @@ const DetailsTab = ({ workOrder }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Key
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{workOrder.key}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Key</label>
+          <p data-testid="wo-detail-key" className="text-sm text-text-primary font-mono">
+            {workOrder.key}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Status
-          </label>
-          <Badge status={workOrder.status}>{workOrder.status}</Badge>
+          <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
+          <Badge data-testid="wo-detail-status" status={workOrder.status}>
+            {workOrder.status}
+          </Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Customer
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{workOrder.customer_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Customer</label>
+          <p data-testid="wo-detail-customer" className="text-sm text-text-primary">
+            {workOrder.customer_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Location
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{workOrder.location_address}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Location</label>
+          <p className="text-sm text-text-primary">{workOrder.location_address}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Service
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{workOrder.service_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Service</label>
+          <p data-testid="wo-detail-service" className="text-sm text-text-primary">
+            {workOrder.service_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Price
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Price</label>
+          <p data-testid="wo-detail-price" className="text-sm text-text-primary">
             {formatters.formatCurrency(workOrder.price || 0)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Owning Business
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">{workOrder.owning_business_name}</p>
+          <p className="text-sm text-text-primary">{workOrder.owning_business_name}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Assigned Business
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
-            {workOrder.assigned_business_name}
-          </p>
+          <p className="text-sm text-text-primary">{workOrder.assigned_business_name}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Start Date
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Start Date</label>
+          <p data-testid="wo-detail-schedule" className="text-sm text-text-primary">
             {formatters.formatDate(new Date(workOrder.start_date))}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            End Date
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">End Date</label>
+          <p className="text-sm text-text-primary">
             {workOrder.end_date ? formatters.formatDate(new Date(workOrder.end_date)) : 'N/A'}
           </p>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Recurring Schedule
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {workOrder.recurring_schedule
               ? rruleToHumanReadable(workOrder.recurring_schedule)
               : 'One-time'}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Created At
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Created At</label>
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(workOrder.created_at)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Updated At
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Updated At</label>
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(workOrder.updated_at)}
           </p>
         </div>
@@ -263,7 +269,9 @@ const ScheduleTab = ({ workOrder, workTasks }) => {
   if (!workOrder.recurring_schedule) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">This is a one-time work order with no recurring schedule.</p>
+        <p className="text-text-tertiary">
+          This is a one-time work order with no recurring schedule.
+        </p>
       </div>
     )
   }
@@ -290,7 +298,7 @@ const ScheduleTab = ({ workOrder, workTasks }) => {
   }, {})
 
   return (
-    <div className="space-y-6">
+    <div data-testid="wo-detail-page" className="space-y-6">
       {Object.entries(months).map(([monthKey, dates]) => {
         const [year, month] = monthKey.split('-').map(Number)
         const monthName = new Date(year, month).toLocaleString('default', {
@@ -304,7 +312,7 @@ const ScheduleTab = ({ workOrder, workTasks }) => {
             <div className="grid grid-cols-7 gap-2">
               {/* Day headers */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                <div key={day} className="text-center text-sm font-medium text-text-tertiary py-2">
                   {day}
                 </div>
               ))}
@@ -330,8 +338,8 @@ const ScheduleTab = ({ workOrder, workTasks }) => {
                     <div
                       key={currentDate.toISOString()}
                       className={`min-h-[60px] p-2 border rounded ${
-                        isCurrentMonth ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
-                      } ${isScheduled ? 'border-blue-300 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                        isCurrentMonth ? 'bg-bg-card' : 'bg-bg-secondary'
+                      } ${isScheduled ? 'border-accent bg-accent/10' : ''}`}
                     >
                       <div className="text-sm font-medium">{currentDate.getDate()}</div>
                       {isScheduled && (
@@ -395,7 +403,9 @@ const WorkTasksTab = ({ workTasks, isLoading }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Work Tasks</h3>
+        <h3 data-testid="wo-worktasks-list" className="text-lg font-medium">
+          Work Tasks
+        </h3>
       </div>
       <DataTable
         columns={columns}
@@ -421,41 +431,33 @@ const ContactTab = ({ customerContacts, customerContactKey, isLoading }) => {
   if (!contact) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No contact assigned to this work order.</p>
+        <p className="text-text-tertiary">No contact assigned to this work order.</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div data-testid="wo-detail-page" className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Name
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Name</label>
+          <p className="text-sm text-text-primary">
             {contact.first_name} {contact.last_name}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Phone
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Phone</label>
+          <p className="text-sm text-text-primary">
             {contact.phone ? formatters.formatPhone(contact.phone) : 'N/A'}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{contact.email || 'N/A'}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Email</label>
+          <p className="text-sm text-text-primary">{contact.email || 'N/A'}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Role
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{contact.role || 'N/A'}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Role</label>
+          <p className="text-sm text-text-primary">{contact.role || 'N/A'}</p>
         </div>
       </div>
     </div>

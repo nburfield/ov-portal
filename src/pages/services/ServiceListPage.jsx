@@ -258,9 +258,9 @@ const ServiceFormModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-danger">*</span>
           </label>
           <Input
             id="name"
@@ -275,7 +275,7 @@ const ServiceFormModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="description"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Description
           </label>
@@ -286,9 +286,9 @@ const ServiceFormModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="default_price"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Default Price <span className="text-red-500">*</span>
+            Default Price <span className="text-danger">*</span>
           </label>
           <Input
             id="default_price"
@@ -305,9 +305,9 @@ const ServiceFormModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="unit"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Unit <span className="text-red-500">*</span>
+            Unit <span className="text-danger">*</span>
           </label>
           <Select
             id="unit"
@@ -323,9 +323,9 @@ const ServiceFormModal = ({ service, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"

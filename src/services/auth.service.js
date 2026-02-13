@@ -1,23 +1,31 @@
 import api from './api.js'
 
 export async function login({ user_name, password }) {
-  const response = await api.post('/api/v2/auth/login', { user_name, password }, {
-    skipAuthRedirect: true, // 401 = bad credentials; let the page show the error
-  })
+  const response = await api.post(
+    '/api/v2/auth/login',
+    { user_name, password },
+    {
+      skipAuthRedirect: true, // 401 = bad credentials; let the page show the error
+    }
+  )
   return response.data
 }
 
 export async function register({ user_name, password, first_name, last_name, email, phone }) {
-  const response = await api.post('/api/v2/auth/register', {
-    user_name,
-    password,
-    first_name,
-    last_name,
-    email,
-    phone,
-  }, {
-    skipAuthRedirect: true, // 4xx = validation/conflict; let the page show the error
-  })
+  const response = await api.post(
+    '/api/v2/auth/register',
+    {
+      user_name,
+      password,
+      first_name,
+      last_name,
+      email,
+      phone,
+    },
+    {
+      skipAuthRedirect: true, // 4xx = validation/conflict; let the page show the error
+    }
+  )
   return response.data
 }
 
@@ -28,11 +36,6 @@ export async function refresh() {
 
 export async function logout() {
   const response = await api.post('/api/v2/auth/logout')
-  return response.data
-}
-
-export async function getUserRoles() {
-  const response = await api.get('/api/v2/auth/roles')
   return response.data
 }
 
@@ -50,7 +53,6 @@ const authService = {
   register,
   refresh,
   logout,
-  getUserRoles,
   changePassword,
 }
 

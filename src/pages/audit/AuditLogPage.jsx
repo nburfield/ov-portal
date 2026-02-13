@@ -91,12 +91,10 @@ const AuditLogPage = () => {
       meta: {
         type: 'select',
         options: [
-          // These would be populated based on available resource types
           { value: 'user', label: 'User' },
           { value: 'workorder', label: 'Work Order' },
           { value: 'invoice', label: 'Invoice' },
           { value: 'fleet', label: 'Fleet Asset' },
-          // Add more as needed
         ],
       },
       size: 150,
@@ -150,31 +148,35 @@ const AuditLogPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div data-testid="audit-log-page" className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Audit Log</h1>
+        <h1 data-testid="audit-log-list" className="text-2xl font-bold">
+          Audit Log
+        </h1>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div className="bg-bg-card border border-border rounded-lg p-4">
         <div className="flex gap-4 items-end">
           <DatePicker
+            data-testid="audit-date-filter"
             label="From Date"
             value={dateFrom.toISOString().split('T')[0]}
             onChange={(e) => setDateFrom(new Date(e.target.value))}
           />
           <DatePicker
+            data-testid="audit-date-to-filter"
             label="To Date"
             value={dateTo.toISOString().split('T')[0]}
             onChange={(e) => setDateTo(new Date(e.target.value))}
           />
-          <Button onClick={refetch}>Apply Filters</Button>
+          <Button onClick={refetch} data-testid="apply-audit-filter">
+            Apply Filters
+          </Button>
         </div>
       </div>
 
-      {/* DataTable */}
       <DataTable
+        data-testid="audit-log-list"
         columns={columns}
         data={auditLogs}
         isLoading={isLoading}
@@ -185,16 +187,16 @@ const AuditLogPage = () => {
         onExportPDF={handleExportPDF}
       />
 
-      {/* Expanded Details */}
       {auditLogs.map(
         (log) =>
           expandedRows.has(log.id) && (
             <div
               key={log.id}
-              className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-2"
+              data-testid={`audit-entry-${log.id}`}
+              className="bg-bg-secondary border border-border rounded-lg p-4 mt-2"
             >
               <h3 className="font-semibold mb-2">Event Details</h3>
-              <pre className="text-sm bg-white dark:bg-gray-900 p-4 rounded border overflow-x-auto">
+              <pre className="text-sm bg-bg-card p-4 rounded border overflow-x-auto">
                 {JSON.stringify(log.details || log, null, 2)}
               </pre>
             </div>

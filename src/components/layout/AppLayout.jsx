@@ -1,48 +1,45 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import Header from './Header'
 import Sidebar from './Sidebar'
+import Header from './Header'
 
 const AppLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('sidebarCollapsed')
-    if (stored) {
-      setTimeout(() => {
-        setSidebarCollapsed(JSON.parse(stored))
-      }, 0)
-    }
-  }, [])
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const toggleSidebar = () => {
-    const newState = !sidebarCollapsed
-    setSidebarCollapsed(newState)
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState))
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen)
   }
 
   return (
-    <div className="h-screen flex flex-col bg-bg-secondary">
-      <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="hidden lg:flex">
+        <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={toggleSidebar}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={toggleMobileMenu} />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full h-full bg-white dark:bg-gray-800">
+            <Sidebar
+              isCollapsed={false}
+              onToggle={toggleMobileMenu}
+              isMobile={true}
+              onMobileMenuClose={toggleMobileMenu}
+            />
+          </div>
+        </div>
+      )}
 
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header onMenuToggle={toggleMobileMenu} />
 
-        <main className="flex-1 overflow-auto">
-          <div className="page-container min-h-full">
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="px-2 py-4 sm:px-4 sm:py-6 md:px-6">
             <Outlet />
           </div>
         </main>

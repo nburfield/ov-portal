@@ -11,7 +11,7 @@ const ColumnFilter = ({ column }) => {
       <select
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        className="block w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent sm:text-sm bg-bg-card text-text-primary"
       >
         <option value="">All</option>
         {options.map((opt) => (
@@ -32,13 +32,13 @@ const ColumnFilter = ({ column }) => {
           type="date"
           value={from}
           onChange={(e) => setValue({ ...value, from: e.target.value })}
-          className="block px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          className="block px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent sm:text-sm bg-bg-card text-text-primary"
         />
         <input
           type="date"
           value={to}
           onChange={(e) => setValue({ ...value, to: e.target.value })}
-          className="block px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          className="block px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent sm:text-sm bg-bg-card text-text-primary"
         />
       </div>
     )
@@ -51,7 +51,7 @@ const ColumnFilter = ({ column }) => {
       value={value}
       onChange={(e) => setValue(e.target.value)}
       placeholder="Filter..."
-      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+      className="block w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent sm:text-sm bg-bg-card text-text-primary"
     />
   )
 }

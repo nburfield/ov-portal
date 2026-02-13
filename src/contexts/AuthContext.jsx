@@ -8,7 +8,32 @@ const AuthContext = createContext()
 
 const TOKEN_KEY = 'auth_token'
 const USER_KEY = 'auth_user'
-const USER_ROLES_KEY = 'auth_user_roles'
+
+function decodeJwt(token) {
+  try {
+    if (!token || typeof token !== 'string') return {}
+    const parts = token.split('.')
+    if (parts.length !== 3) return {}
+    return JSON.parse(atob(parts[1]))
+  } catch {
+    return {}
+  }
+}
+
+function extractRolesFromJwt(token) {
+  const payload = decodeJwt(token)
+  return payload.roles || []
+}
+
+function userFromJwt(token, existingUser = null) {
+  const payload = decodeJwt(token)
+  if (!payload || !payload.user_name) return existingUser
+  return {
+    ...(existingUser || {}),
+    user_name: payload.user_name,
+    email: payload.email ?? existingUser?.email,
+  }
+}
 
 let refreshTimeoutId = null
 
@@ -18,33 +43,25 @@ export function AuthProvider({ children }) {
   const [state, setState] = useState(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     const user = localStorage.getItem(USER_KEY)
-    const userRoles = localStorage.getItem(USER_ROLES_KEY)
 
     let parsedUser = null
-    let parsedRoles = {}
+    const userRoles = token ? extractRolesFromJwt(token) : []
 
     try {
       if (user && user !== 'undefined') {
         parsedUser = JSON.parse(user)
       }
-    } catch (e) {
-      console.error('Failed to parse user from localStorage:', e)
+    } catch {
+      console.error('Failed to parse user from localStorage')
     }
 
-    try {
-      if (userRoles && userRoles !== 'undefined') {
-        parsedRoles = JSON.parse(userRoles)
-      }
-    } catch (e) {
-      console.error('Failed to parse userRoles from localStorage:', e)
-    }
-
+    const userWithJwt = token ? userFromJwt(token, parsedUser) : parsedUser
     return {
       token: token,
-      user: parsedUser,
+      user: userWithJwt,
       isAuthenticated: !!token,
       isLoading: false,
-      userRoles: parsedRoles,
+      userRoles: userRoles,
     }
   })
 
@@ -101,15 +118,15 @@ export function AuthProvider({ children }) {
         })
 
         const { token, user } = response
-        const userRoles = await authService.getUserRoles()
+        const userRoles = extractRolesFromJwt(token)
+        const userWithJwt = userFromJwt(token, user)
 
         localStorage.setItem(TOKEN_KEY, token)
-        localStorage.setItem(USER_KEY, JSON.stringify(user))
-        localStorage.setItem(USER_ROLES_KEY, JSON.stringify(userRoles))
+        localStorage.setItem(USER_KEY, JSON.stringify(userWithJwt))
 
         setState({
           token,
-          user,
+          user: userWithJwt,
           isAuthenticated: true,
           isLoading: false,
           userRoles,
@@ -131,15 +148,15 @@ export function AuthProvider({ children }) {
         const response = await authService.login(credentials)
 
         const { token, user } = response
-        const userRoles = await authService.getUserRoles()
+        const userRoles = extractRolesFromJwt(token)
+        const userWithJwt = userFromJwt(token, user)
 
         localStorage.setItem(TOKEN_KEY, token)
-        localStorage.setItem(USER_KEY, JSON.stringify(user))
-        localStorage.setItem(USER_ROLES_KEY, JSON.stringify(userRoles))
+        localStorage.setItem(USER_KEY, JSON.stringify(userWithJwt))
 
         setState({
           token,
-          user,
+          user: userWithJwt,
           isAuthenticated: true,
           isLoading: false,
           userRoles,
@@ -166,13 +183,12 @@ export function AuthProvider({ children }) {
       clearRefreshTimeout()
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(USER_KEY)
-      localStorage.removeItem(USER_ROLES_KEY)
       setState({
         token: null,
         user: null,
         isAuthenticated: false,
         isLoading: false,
-        userRoles: {},
+        userRoles: [],
       })
       navigate(ROUTES.LOGIN)
     }
@@ -185,10 +201,17 @@ export function AuthProvider({ children }) {
 
       localStorage.setItem(TOKEN_KEY, token)
 
-      setState((prev) => ({
-        ...prev,
-        token,
-      }))
+      setState((prev) => {
+        const userWithJwt = userFromJwt(token, prev.user)
+        if (userWithJwt) {
+          localStorage.setItem(USER_KEY, JSON.stringify(userWithJwt))
+        }
+        return {
+          ...prev,
+          token,
+          user: userWithJwt ?? prev.user,
+        }
+      })
 
       scheduleTokenRefresh(token)
     } catch (error) {

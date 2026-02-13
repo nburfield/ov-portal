@@ -125,7 +125,7 @@ const FleetDetailPage = () => {
               <Badge status={fleetAsset.status}>{fleetAsset.status}</Badge>
               <button
                 onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
               >
                 <code className="font-mono">{fleetAsset.key}</code>
                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -206,44 +206,44 @@ const DetailsTab = ({ fleetAsset }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Type
           </label>
           <Badge>{fleetAsset.type}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Identifier
           </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{fleetAsset.identifier}</p>
+          <p className="text-sm text-text-primary font-mono">{fleetAsset.identifier}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Status
           </label>
           <Badge status={fleetAsset.status}>{fleetAsset.status}</Badge>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Mileage
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatNumber(fleetAsset.mileage)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Created At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(fleetAsset.created_at)}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-text-primary mb-1">
             Updated At
           </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <p className="text-sm text-text-primary">
             {formatters.formatDateTime(fleetAsset.updated_at)}
           </p>
         </div>
@@ -391,9 +391,9 @@ const EditFleetAssetModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="type"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Type <span className="text-red-500">*</span>
+            Type <span className="text-danger">*</span>
           </label>
           <Select
             id="type"
@@ -409,9 +409,9 @@ const EditFleetAssetModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="identifier"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Identifier <span className="text-red-500">*</span>
+            Identifier <span className="text-danger">*</span>
           </label>
           <Input
             id="identifier"
@@ -426,9 +426,9 @@ const EditFleetAssetModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="status"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Status <span className="text-red-500">*</span>
+            Status <span className="text-danger">*</span>
           </label>
           <Select
             id="status"
@@ -444,9 +444,9 @@ const EditFleetAssetModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="mileage"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Mileage <span className="text-red-500">*</span>
+            Mileage <span className="text-danger">*</span>
           </label>
           <Input
             id="mileage"
@@ -508,9 +508,9 @@ const LogMaintenanceModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="date"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Date <span className="text-red-500">*</span>
+            Date <span className="text-danger">*</span>
           </label>
           <DatePicker
             id="date"
@@ -525,9 +525,9 @@ const LogMaintenanceModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="type"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Type <span className="text-red-500">*</span>
+            Type <span className="text-danger">*</span>
           </label>
           <Input
             id="type"
@@ -543,7 +543,7 @@ const LogMaintenanceModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="notes"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
             Notes
           </label>
@@ -559,9 +559,9 @@ const LogMaintenanceModal = ({ fleetAsset, onSave, onClose }) => {
         <div>
           <label
             htmlFor="mileage"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-text-primary mb-1"
           >
-            Mileage <span className="text-red-500">*</span>
+            Mileage <span className="text-danger">*</span>
           </label>
           <Input
             id="mileage"

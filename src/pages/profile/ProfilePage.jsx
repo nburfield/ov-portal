@@ -56,42 +56,42 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div data-testid="profile-page" className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Profile</h1>
-        <Button onClick={() => setShowEditModal(true)}>Edit Profile</Button>
+        <Button onClick={() => setShowEditModal(true)} data-testid="profile-edit-button">
+          Edit Profile
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            First Name
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user?.first_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">First Name</label>
+          <p data-testid="profile-first-name" className="text-sm text-text-primary">
+            {user?.first_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Last Name
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user?.last_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Last Name</label>
+          <p data-testid="profile-last-name" className="text-sm text-text-primary">
+            {user?.last_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Username
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white font-mono">{user?.user_name}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Username</label>
+          <p data-testid="profile-username" className="text-sm text-text-primary font-mono">
+            {user?.user_name}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">{user?.email}</p>
+          <label className="block text-sm font-medium text-text-primary mb-1">Email</label>
+          <p data-testid="profile-email" className="text-sm text-text-primary">
+            {user?.email}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Phone
-          </label>
-          <p className="text-sm text-gray-900 dark:text-white">
+          <label className="block text-sm font-medium text-text-primary mb-1">Phone</label>
+          <p data-testid="profile-phone" className="text-sm text-text-primary">
             {user?.phone ? user.phone : 'N/A'}
           </p>
         </div>
@@ -102,7 +102,9 @@ const ProfilePage = () => {
         <div className="space-y-4">
           {(Array.isArray(businesses) ? businesses : []).map((business) => (
             <div key={business.business_key} className="border rounded-lg p-4">
-              <h3 className="font-medium">{business.name}</h3>
+              <h3 data-testid="profile-businesses" className="font-medium">
+                {business.name}
+              </h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 {(roles[business.business_key] || []).map((role) => (
                   <Badge key={role}>{role}</Badge>
@@ -119,12 +121,13 @@ const ProfilePage = () => {
             <div>
               <label
                 htmlFor="first_name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-text-primary mb-1"
               >
-                First Name <span className="text-red-500">*</span>
+                First Name <span className="text-danger">*</span>
               </label>
               <Input
                 id="first_name"
+                data-testid="profile-first-name-input"
                 {...register('first_name', {
                   validate: (value) => validateField(value, 'First name'),
                 })}
@@ -135,12 +138,13 @@ const ProfilePage = () => {
             <div>
               <label
                 htmlFor="last_name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-text-primary mb-1"
               >
-                Last Name <span className="text-red-500">*</span>
+                Last Name <span className="text-danger">*</span>
               </label>
               <Input
                 id="last_name"
+                data-testid="profile-last-name-input"
                 {...register('last_name', {
                   validate: (value) => validateField(value, 'Last name'),
                 })}
@@ -149,15 +153,13 @@ const ProfilePage = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Email <span className="text-red-500">*</span>
+              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
+                Email <span className="text-danger">*</span>
               </label>
               <Input
                 id="email"
                 type="email"
+                data-testid="profile-email-input"
                 {...register('email', {
                   validate: (value) => validateField(value, 'Email', validateEmail),
                 })}
@@ -166,15 +168,13 @@ const ProfilePage = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
+              <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1">
                 Phone
               </label>
               <Input
                 id="phone"
                 type="tel"
+                data-testid="profile-phone-input"
                 {...register('phone', {
                   validate: (value) => (value ? validatePhone(value) : null),
                 })}

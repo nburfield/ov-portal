@@ -1,39 +1,35 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useAuth } from '../../hooks/useAuth'
-import { useBusiness } from '../../hooks/useBusiness'
-import { getAll, create } from '../../services/invoice.service'
-import { getAll as getAllCustomers } from '../../services/customer.service'
+import { invoiceService } from '../../services/invoice.service'
+import { customerService } from '../../services/customer.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import DatePicker from '../../components/ui/DatePicker'
-import SlideOver from '../../components/ui/SlideOver'
-import FormActions from '../../components/forms/FormActions'
+import CreateInvoiceModal from '../../components/modals/CreateInvoiceModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import { validateRequired } from '../../utils/validators'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, EyeIcon, PlusIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
+import { useBusiness } from '../../hooks/useBusiness'
+import { useAuth } from '../../hooks/useAuth'
 
 const InvoiceListPage = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { user } = useAuth()
   const { getCurrentRoles } = useBusiness()
-  const [showCreateSlideOver, setShowCreateSlideOver] = useState(false)
-  const [selectedRows, setSelectedRows] = useState([])
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [selectedRows, setSelectedRows] = useState([])
 
   const currentRoles = getCurrentRoles()
   const isCustomer = currentRoles.includes('customer')
   const isManagerOrAbove = ['owner', 'manager'].some((role) => currentRoles.includes(role))
 
-  // Get query params for API
   const queryParams = useMemo(() => {
     const params = {}
     if (isCustomer && user?.customer_key) {
@@ -45,40 +41,80 @@ const InvoiceListPage = () => {
     return params
   }, [isCustomer, user, statusFilter])
 
-  const { data: invoices = [], isLoading, refetch } = useApiQuery(() => getAll(queryParams))
-  const { data: customers = [] } = useApiQuery(getAllCustomers, { enabled: isManagerOrAbove })
+  const { data, isLoading, refetch } = useApiQuery(() => invoiceService.getAll(queryParams))
+  const { data: customers = [] } = useApiQuery(customerService.getAll, {
+    enabled: isManagerOrAbove,
+  })
+
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
+  }
+
+  const invoicesData = useMemo(() => {
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.values)) return data.values
+    return []
+  }, [data])
+
+  const filteredInvoices = useMemo(() => {
+    let filtered = invoicesData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (invoice) =>
+          invoice.key?.toLowerCase().includes(lowerSearch) ||
+          invoice.customer_name?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((invoice) => invoice.status === statusFilter)
+    }
+
+    return filtered
+  }, [invoicesData, searchTerm, statusFilter])
 
   const handleRowClick = (row) => {
     navigate(`/invoices/${row.original.key}`)
   }
 
   const handleCreateInvoice = () => {
-    setShowCreateSlideOver(true)
+    setShowCreateModal(true)
   }
 
-  const handleCloseSlideOver = () => {
-    setShowCreateSlideOver(false)
+  const handleCloseModal = () => {
+    setShowCreateModal(false)
   }
 
   const handleSaveInvoice = async (invoiceData) => {
     try {
-      await create(invoiceData)
+      await invoiceService.create(invoiceData)
       showToast('Invoice created successfully', 'success')
       refetch()
-      handleCloseSlideOver()
+      handleCloseModal()
     } catch {
-      showToast('Failed to save invoice', 'error')
+      showToast('Failed to create invoice', 'error')
     }
   }
 
   const handleBulkFinalize = async () => {
-    // TODO: Implement bulk finalize
     showToast('Bulk finalize not implemented yet', 'info')
   }
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(invoices, columns, 'invoices')
+      exportToCSV(filteredInvoices, columns, 'invoices')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -87,7 +123,7 @@ const InvoiceListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(invoices, columns, 'Invoices Report')
+      exportToPDF(filteredInvoices, columns, 'Invoices Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
@@ -99,19 +135,16 @@ const InvoiceListPage = () => {
       accessorKey: 'key',
       header: 'Invoice Key',
       cell: ({ row }) => (
-        <code className="rounded bg-bg-tertiary px-1 py-0.5 text-xs">{row.original.key}</code>
+        <code className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+          {row.original.key}
+        </code>
       ),
       enableSorting: true,
-      filterFn: 'includesString',
     },
     {
       accessorKey: 'customer_name',
       header: 'Customer',
       enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        return row.original.customer_name?.toLowerCase().includes(filterValue.toLowerCase())
-      },
     },
     {
       accessorKey: 'period_start',
@@ -146,222 +179,138 @@ const InvoiceListPage = () => {
       header: 'Status',
       cell: ({ row }) => <Badge status={row.original.status}>{row.original.status}</Badge>,
       enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        return row.original.status === filterValue
-      },
     },
     {
       accessorKey: 'created_at',
       header: 'Created',
-      cell: ({ row }) => formatters.formatRelativeDate(new Date(row.original.created_at)),
+      cell: ({ row }) =>
+        row.original.created_at
+          ? formatters.formatDateTime(new Date(row.original.created_at))
+          : 'N/A',
       enableSorting: true,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const invoice = row.original
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/invoices/${invoice.key}`)
+            }}
+            className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+        )
+      },
+      enableSorting: false,
     },
   ]
 
-  const emptyState = {
-    title: 'No invoices found',
-    description: 'Get started by creating your first invoice.',
-    action: isManagerOrAbove
-      ? {
-          label: '+ New Invoice',
-          onClick: handleCreateInvoice,
-        }
-      : undefined,
-  }
+  const hasActiveFilters = searchTerm || statusFilter
 
-  const quickFilters = (
-    <div data-testid="filter-status" className="flex gap-2">
-      {['Draft', 'Finalized', 'Paid', 'Void', 'Overdue'].map((status) => (
-        <Button
-          key={status}
-          variant={statusFilter === status.toLowerCase() ? 'default' : 'outline'}
-          size="sm"
-          data-testid={`filter-${status.toLowerCase()}`}
-          onClick={() =>
-            setStatusFilter(statusFilter === status.toLowerCase() ? '' : status.toLowerCase())
-          }
-        >
-          {status}
-        </Button>
-      ))}
-    </div>
-  )
-
-  const bulkActions =
-    selectedRows.length > 0 && isManagerOrAbove ? (
-      <div className="flex gap-2">
-        <Button onClick={handleBulkFinalize} variant="outline" size="sm">
-          Finalize
-        </Button>
-        <Button onClick={handleExportCSV} variant="outline" size="sm">
-          Export
-        </Button>
-      </div>
-    ) : null
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'finalized', label: 'Finalized' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'void', label: 'Void' },
+    { value: 'overdue', label: 'Overdue' },
+  ]
 
   return (
-    <div data-testid="invoices-page" className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Invoices</h1>
-        {isManagerOrAbove && (
-          <Button onClick={handleCreateInvoice} className="flex items-center gap-2">
-            <PlusIcon className="h-4 w-4" />+ New Invoice
-          </Button>
+    <div data-testid="invoices-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+                Invoices
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your invoices ({filteredInvoices.length} of {invoicesData.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              {isManagerOrAbove && (
+                <Button
+                  onClick={handleCreateInvoice}
+                  data-testid="create-invoice-button"
+                  className="flex items-center gap-2"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Create Invoice
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredInvoices}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={isManagerOrAbove}
+          onSelectionChange={setSelectedRows}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by invoice key or customer...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: statusOptions,
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+          bulkActions={
+            selectedRows.length > 0 && isManagerOrAbove ? (
+              <div className="flex gap-2">
+                <Button onClick={handleBulkFinalize} variant="outline" size="sm">
+                  Finalize
+                </Button>
+                <Button onClick={handleExportCSV} variant="outline" size="sm">
+                  Export
+                </Button>
+              </div>
+            ) : null
+          }
+        />
+
+        {showCreateModal && (
+          <CreateInvoiceModal
+            isOpen={showCreateModal}
+            onClose={handleCloseModal}
+            onSuccess={handleSaveInvoice}
+            customers={customers}
+          />
         )}
       </div>
-
-      {/* Quick Filters */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm font-medium">Quick Filters:</span>
-        {quickFilters}
-      </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={invoices}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={isManagerOrAbove}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-      />
-
-      {/* Create SlideOver */}
-      {showCreateSlideOver && (
-        <CreateInvoiceSlideOver
-          customers={customers}
-          onSave={handleSaveInvoice}
-          onClose={handleCloseSlideOver}
-        />
-      )}
     </div>
-  )
-}
-
-const CreateInvoiceSlideOver = ({ customers, onSave, onClose }) => {
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: {
-      customer_key: '',
-      period_start: '',
-      period_end: '',
-      tax: 0.0,
-      status: 'draft',
-    },
-  })
-
-  const periodStart = watch('period_start')
-
-  const validateField = (value, fieldName) => {
-    return validateRequired(value, fieldName)
-  }
-
-  const validatePeriodEnd = (value) => {
-    if (!periodStart || !value) return
-    if (new Date(value) <= new Date(periodStart)) {
-      return 'Period end must be after period start'
-    }
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      showToast('Failed to save invoice', 'error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const customerOptions = customers.map((customer) => ({
-    value: customer.key,
-    label: customer.name,
-  }))
-
-  return (
-    <SlideOver
-      isOpen={true}
-      onClose={onClose}
-      data-testid="invoice-slideover"
-      title="Create Invoice"
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Customer */}
-        <div>
-          <label
-            htmlFor="customer_key"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Customer <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="customer_key"
-            {...register('customer_key', {
-              validate: (value) => validateField(value, 'Customer'),
-            })}
-            error={errors.customer_key?.message}
-            options={customerOptions}
-            placeholder="Select a customer"
-          />
-        </div>
-
-        {/* Period Start */}
-        <DatePicker
-          data-testid="inv-date-input"
-          label="Period Start"
-          {...register('period_start', {
-            validate: (value) => validateField(value, 'Period Start'),
-          })}
-          error={errors.period_start?.message}
-          required
-        />
-
-        {/* Period End */}
-        <DatePicker
-          data-testid="inv-due-date-input"
-          label="Period End"
-          {...register('period_end', {
-            validate: (value) => {
-              const requiredError = validateField(value, 'Period End')
-              if (requiredError) return requiredError
-              return validatePeriodEnd(value)
-            },
-          })}
-          error={errors.period_end?.message}
-          min={periodStart}
-          required
-        />
-
-        {/* Tax */}
-        <div>
-          <label htmlFor="tax" className="block text-sm font-medium text-text-primary mb-1">
-            Tax
-          </label>
-          <Input id="tax" type="number" step="0.01" {...register('tax')} placeholder="0.00" />
-        </div>
-
-        {/* Status - Hidden, always draft */}
-        <input type="hidden" {...register('status')} value="draft" />
-
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </SlideOver>
   )
 }
 

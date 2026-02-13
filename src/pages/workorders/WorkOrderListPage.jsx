@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useAuth } from '../../hooks/useAuth'
-import { useBusiness } from '../../hooks/useBusiness'
 import { getAll } from '../../services/workorder.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
-import { Badge } from '../../components/ui/Badge'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
 import { hasMinRole, ROLES } from '../../constants/roles'
-import { PlusIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../../hooks/useAuth'
+import { useBusiness } from '../../hooks/useBusiness'
+import { ArrowPathIcon, PlusIcon, WrenchIcon } from '@heroicons/react/24/outline'
 
 const WorkOrderListPage = () => {
   const navigate = useNavigate()
@@ -19,12 +18,10 @@ const WorkOrderListPage = () => {
   const { user } = useAuth()
   const { activeBusiness, getCurrentRoles } = useBusiness()
   const [selectedRows, setSelectedRows] = useState([])
-  const [quickFilter, setQuickFilter] = useState('')
-
+  const [statusFilter, setStatusFilter] = useState('')
+  const [recurringFilter, setRecurringFilter] = useState('')
   const currentRoles = getCurrentRoles()
   const isOwnerOrManager = hasMinRole(currentRoles, ROLES.MANAGER)
-
-  // Determine query params based on role
   const isCustomerRole = currentRoles.includes(ROLES.CUSTOMER)
   const isWorkerRole = currentRoles.includes(ROLES.WORKER)
 
@@ -37,7 +34,7 @@ const WorkOrderListPage = () => {
     return {}
   }, [isCustomerRole, isWorkerRole, user, activeBusiness])
 
-  const { data: workOrders = [], isLoading } = useApiQuery(() => getAll(queryParams))
+  const { data: workOrders = [], isLoading, refetch } = useApiQuery(() => getAll(queryParams))
 
   const handleRowClick = (row) => {
     navigate(`/workorders/${row.original.key}`)
@@ -48,14 +45,13 @@ const WorkOrderListPage = () => {
   }
 
   const handleBulkChangeStatus = async (newStatus) => {
-    // TODO: Implement bulk status change
     showToast(`Bulk status change to ${newStatus} not implemented yet`, 'info')
     setSelectedRows([])
   }
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(workOrders, columns, 'work_orders')
+      exportToCSV(filteredWorkOrders, columns, 'work_orders')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -64,38 +60,33 @@ const WorkOrderListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(workOrders, columns, 'Work Orders Report')
+      exportToPDF(filteredWorkOrders, columns, 'Work Orders Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
     }
   }
 
-  const handleQuickFilter = (filter) => {
-    setQuickFilter(filter)
+  const handleClearFilters = () => {
+    setStatusFilter('')
+    setRecurringFilter('')
   }
 
-  // Apply quick filters
   const filteredWorkOrders = useMemo(() => {
-    if (!quickFilter) return workOrders
+    let filtered = workOrders
 
-    return workOrders.filter((workOrder) => {
-      switch (quickFilter) {
-        case 'active':
-          return workOrder.status === 'active'
-        case 'paused':
-          return workOrder.status === 'paused'
-        case 'cancelled':
-          return workOrder.status === 'cancelled'
-        case 'recurring':
-          return workOrder.recurring
-        case 'one-time':
-          return !workOrder.recurring
-        default:
-          return true
-      }
-    })
-  }, [workOrders, quickFilter])
+    if (statusFilter) {
+      filtered = filtered.filter((workOrder) => workOrder.status === statusFilter)
+    }
+
+    if (recurringFilter) {
+      filtered = filtered.filter((workOrder) =>
+        recurringFilter === 'yes' ? workOrder.recurring : !workOrder.recurring
+      )
+    }
+
+    return filtered
+  }, [workOrders, statusFilter, recurringFilter])
 
   const columns = [
     {
@@ -145,9 +136,13 @@ const WorkOrderListPage = () => {
       accessorKey: 'recurring',
       header: 'Recurring',
       cell: ({ row }) => (
-        <Badge status={row.original.recurring ? 'success' : 'default'}>
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${
+            row.original.recurring ? 'bg-green-600' : 'bg-gray-600'
+          }`}
+        >
           {row.original.recurring ? 'Yes' : 'No'}
-        </Badge>
+        </span>
       ),
       filterFn: (row, columnId, filterValue) => {
         if (!filterValue) return true
@@ -157,49 +152,49 @@ const WorkOrderListPage = () => {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <Badge status={row.original.status}>{row.original.status}</Badge>,
-      enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        return row.original.status === filterValue
+      cell: ({ row }) => {
+        const status = row.original.status
+        const statusColors = {
+          active: 'bg-green-600',
+          paused: 'bg-yellow-600',
+          cancelled: 'bg-gray-600',
+        }
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${
+              statusColors[status] || 'bg-gray-600'
+            }`}
+          >
+            {status}
+          </span>
+        )
       },
+      enableSorting: true,
     },
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              navigate(`/workorders/${row.original.key}/edit`)
-            }}
-            className="flex items-center gap-1"
-          >
-            <PencilIcon className="h-4 w-4" />
-            Edit
-          </Button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            navigate(`/workorders/${row.original.key}/edit`)
+          }}
+          className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+        </button>
       ),
       enableSorting: false,
-      enableResizing: false,
     },
   ]
-
-  const emptyState = {
-    title: 'No work orders found',
-    description: isCustomerRole
-      ? 'You have no work orders yet.'
-      : 'Get started by creating your first work order.',
-    action: isOwnerOrManager
-      ? {
-          label: '+ New Work Order',
-          onClick: handleCreateWorkOrder,
-        }
-      : null,
-  }
 
   const bulkActions =
     selectedRows.length > 0 ? (
@@ -216,61 +211,88 @@ const WorkOrderListPage = () => {
       </div>
     ) : null
 
-  const quickFilterButtons = [
-    { key: '', label: 'All' },
-    { key: 'active', label: 'Active' },
-    { key: 'paused', label: 'Paused' },
-    { key: 'cancelled', label: 'Cancelled' },
-    { key: 'recurring', label: 'Recurring Only' },
-    { key: 'one-time', label: 'One-Time Only' },
-  ]
+  const hasActiveFilters = statusFilter || recurringFilter
 
   return (
-    <div data-testid="work-orders-page" className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Work Orders</h1>
-        {isOwnerOrManager && (
-          <Button onClick={handleCreateWorkOrder} className="flex items-center gap-2">
-            <PlusIcon className="h-4 w-4" />+ New Work Order
-          </Button>
-        )}
-      </div>
+    <div data-testid="work-orders-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-9/10 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <WrenchIcon className="h-8 w-8 text-blue-600" />
+                Work Orders
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your work orders ({filteredWorkOrders.length} of {workOrders.length || 0}{' '}
+                total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              {isOwnerOrManager && (
+                <Button onClick={handleCreateWorkOrder} className="flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  New Work Order
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
-      {/* Quick Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {quickFilterButtons.map((filter) => (
-          <Button
-            key={filter.key}
-            variant={quickFilter === filter.key ? 'default' : 'outline'}
-            size="sm"
-            data-testid={filter.key ? `quick-filter-${filter.key}` : 'quick-filter-all'}
-            onClick={() => handleQuickFilter(filter.key)}
-          >
-            {filter.label}
-          </Button>
-        ))}
+        <DataTable
+          columns={columns}
+          data={filteredWorkOrders}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={true}
+          bulkActions={bulkActions}
+          onSelectionChange={setSelectedRows}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by key, customer, service, or location...',
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'paused', label: 'Paused' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ],
+              },
+              {
+                id: 'recurring',
+                label: 'Recurring',
+                value: recurringFilter,
+                onChange: (e) => setRecurringFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Types' },
+                  { value: 'yes', label: 'Recurring' },
+                  { value: 'no', label: 'One-Time' },
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+        />
       </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={filteredWorkOrders}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={true}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-        initialColumnFilters={[
-          {
-            id: 'status',
-            value: '',
-          },
-        ]}
-      />
     </div>
   )
 }

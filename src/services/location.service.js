@@ -23,3 +23,11 @@ export const update = async (key, data) => {
 export const remove = async (key) => {
   await api.delete(`/api/v2/locations/${key}`)
 }
+
+export const locationService = {
+  getAll,
+  getByKey,
+  create,
+  update,
+  remove,
+}

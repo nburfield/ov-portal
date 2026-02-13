@@ -17,6 +17,8 @@ const Button = ({
     primary: 'bg-accent text-accent-foreground hover:bg-accent-hover focus:ring-accent shadow-sm',
     secondary:
       'bg-bg-tertiary text-text-primary hover:bg-bg-hover border border-border focus:ring-border',
+    tertiary:
+      'bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary focus:ring-border',
     ghost:
       'bg-transparent text-text-secondary hover:bg-bg-hover hover:text-text-primary focus:ring-border',
     danger: 'bg-danger text-danger-foreground hover:bg-danger/90 focus:ring-danger shadow-sm',

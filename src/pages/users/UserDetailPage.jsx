@@ -26,6 +26,7 @@ import {
   TrashIcon,
   ClipboardDocumentIcon,
   PlusIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
 const UserDetailPage = () => {
@@ -38,6 +39,7 @@ const UserDetailPage = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showAddRoleModal, setShowAddRoleModal] = useState(false)
+  const [localLoading, setLocalLoading] = useState(false)
 
   const {
     data: user,
@@ -111,6 +113,16 @@ const UserDetailPage = () => {
     }
   }
 
+  const handleRefresh = async () => {
+    setLocalLoading(true)
+    try {
+      await refetchUser()
+      await refetchRoles()
+    } finally {
+      setLocalLoading(false)
+    }
+  }
+
   const tabs = [
     { key: 'details', label: 'Details' },
     { key: 'roles', label: 'Roles' },
@@ -118,18 +130,133 @@ const UserDetailPage = () => {
     { key: 'work-history', label: 'Work History' },
   ]
 
+  const statusColors = {
+    active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    archived: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  }
+
   if (userLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-2">
+              <svg className="animate-spin h-6 w-6 text-blue-600" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+              <span className="text-gray-600 dark:text-gray-400">Loading user...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!user) {
-    return <div>User not found</div>
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+            User not found
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div data-testid="user-detail-page" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <div data-testid="user-detail-page" className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {user.first_name} {user.last_name}
+                </h1>
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[user.status] || statusColors.inactive}`}
+                >
+                  {user.status || 'N/A'}
+                </span>
+              </div>
+              {user.key && (
+                <button
+                  type="button"
+                  onClick={handleCopyKey}
+                  className="block text-xs text-gray-400 dark:text-gray-500 truncate cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none mt-1"
+                  title="Click to copy user key"
+                >
+                  {user.key}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={localLoading}
+                className="flex items-center gap-2"
+              >
+                {localLoading ? (
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                ) : (
+                  <ArrowPathIcon className="h-4 w-4" />
+                )}
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleEdit}
+                data-testid="user-edit-button"
+                className="flex items-center gap-2"
+              >
+                <PencilIcon className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDelete}
+                data-testid="user-delete-button"
+                className="flex items-center gap-2"
+              >
+                <TrashIcon className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6">
           <Button
             variant="ghost"
             onClick={handleBack}
@@ -139,104 +266,67 @@ const UserDetailPage = () => {
             <ArrowLeftIcon className="h-4 w-4" />
             Back to Users
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {user.first_name} {user.last_name}
-            </h1>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge status={user.status}>{user.status}</Badge>
-              <button
-                onClick={handleCopyKey}
-                className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-primary"
-              >
-                <code data-testid="user-detail-key" className="font-mono">
-                  {user.key}
-                </code>
-                <ClipboardDocumentIcon data-testid="copy-key-button" className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={handleEdit}
-            data-testid="user-edit-button"
-            className="flex items-center gap-2"
-          >
-            <PencilIcon className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-            data-testid="user-delete-button"
-            className="flex items-center gap-2"
-          >
-            <TrashIcon className="h-4 w-4" />
-            Delete
-          </Button>
+
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+
+        <div className="mt-6">
+          {activeTab === 'details' && <DetailsTab user={user} />}
+          {activeTab === 'roles' && (
+            <RolesTab
+              user={user}
+              userRoles={userRoles}
+              isLoading={rolesLoading}
+              refetchRoles={refetchRoles}
+              onAddRole={() => setShowAddRoleModal(true)}
+            />
+          )}
+          {activeTab === 'certifications' && (
+            <CertificationsTab certifications={certifications} isLoading={certsLoading} />
+          )}
+          {activeTab === 'work-history' && (
+            <WorkHistoryTab workTasks={workTasks} isLoading={tasksLoading} />
+          )}
         </div>
-      </div>
 
-      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-
-      <div className="mt-6">
-        {activeTab === 'details' && <DetailsTab user={user} />}
-        {activeTab === 'roles' && (
-          <RolesTab
+        {showEditModal && (
+          <EditUserModal
             user={user}
-            userRoles={userRoles}
-            isLoading={rolesLoading}
-            refetchRoles={refetchRoles}
-            onAddRole={() => setShowAddRoleModal(true)}
+            onSave={async () => {
+              await refetchUser()
+              setShowEditModal(false)
+            }}
+            onClose={() => setShowEditModal(false)}
           />
         )}
-        {activeTab === 'certifications' && (
-          <CertificationsTab certifications={certifications} isLoading={certsLoading} />
-        )}
-        {activeTab === 'work-history' && (
-          <WorkHistoryTab workTasks={workTasks} isLoading={tasksLoading} />
+
+        <ConfirmDialog
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={handleConfirmDelete}
+          title="Delete User"
+          description={`Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone.`}
+          confirmLabel="Delete User"
+          variant="danger"
+        />
+
+        {showAddRoleModal && (
+          <AddRoleModal
+            user={user}
+            existingRoles={(Array.isArray(userRoles) ? userRoles : []).map((ur) => ur.role)}
+            onSave={async (role) => {
+              await userroleService.create({
+                user_key: user.key,
+                business_key: activeBusiness.business_key,
+                role,
+              })
+              refetchRoles()
+              setShowAddRoleModal(false)
+            }}
+            onClose={() => setShowAddRoleModal(false)}
+          />
         )}
       </div>
-
-      {showEditModal && (
-        <EditUserModal
-          user={user}
-          onSave={async () => {
-            await refetchUser()
-            setShowEditModal(false)
-          }}
-          onClose={() => setShowEditModal(false)}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-        onConfirm={handleConfirmDelete}
-        title="Delete User"
-        description={`Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone.`}
-        confirmLabel="Delete User"
-        variant="danger"
-      />
-
-      {showAddRoleModal && (
-        <AddRoleModal
-          user={user}
-          existingRoles={(Array.isArray(userRoles) ? userRoles : []).map((ur) => ur.role)}
-          onSave={async (role) => {
-            await userroleService.create({
-              user_key: user.key,
-              business_key: activeBusiness.business_key,
-              role,
-            })
-            refetchRoles()
-            setShowAddRoleModal(false)
-          }}
-          onClose={() => setShowAddRoleModal(false)}
-        />
-      )}
     </div>
   )
 }
@@ -244,46 +334,117 @@ const UserDetailPage = () => {
 const DetailsTab = ({ user }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">First Name</label>
-          <p data-testid="user-detail-first-name" className="text-sm text-text-primary">
-            {user.first_name}
-          </p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          Personal Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              First Name
+            </label>
+            <input
+              type="text"
+              data-testid="user-detail-first-name"
+              value={user.first_name || 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Last Name
+            </label>
+            <input
+              type="text"
+              value={user.last_name || 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              value={user.user_name || 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-mono"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              type="text"
+              data-testid="user-detail-email"
+              value={user.email || 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Phone
+            </label>
+            <input
+              type="text"
+              data-testid="user-detail-phone"
+              value={user.phone ? formatters.formatPhone(user.phone) : 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status
+            </label>
+            <div className="mt-1">
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  user.status === 'active'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                    : user.status === 'inactive'
+                      ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                }`}
+              >
+                {user.status || 'N/A'}
+              </span>
+            </div>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Last Name</label>
-          <p className="text-sm text-text-primary">{user.last_name}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Username</label>
-          <p className="text-sm text-text-primary font-mono">{user.user_name}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Email</label>
-          <p data-testid="user-detail-email" className="text-sm text-text-primary">
-            {user.email}
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Phone</label>
-          <p data-testid="user-detail-phone" className="text-sm text-text-primary">
-            {user.phone ? formatters.formatPhone(user.phone) : 'N/A'}
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
-          <Badge data-testid="user-detail-status" status={user.status}>
-            {user.status}
-          </Badge>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Created At</label>
-          <p className="text-sm text-text-primary">{formatters.formatDateTime(user.created_at)}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">Updated At</label>
-          <p className="text-sm text-text-primary">{formatters.formatDateTime(user.updated_at)}</p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          System Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Created At
+            </label>
+            <input
+              type="text"
+              value={user.created_at ? formatters.formatDateTime(user.created_at) : 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Updated At
+            </label>
+            <input
+              type="text"
+              value={user.updated_at ? formatters.formatDateTime(user.updated_at) : 'N/A'}
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -311,33 +472,71 @@ const RolesTab = ({ user, userRoles, isLoading, refetchRoles, onAddRole }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 data-testid="tab-roles" className="text-lg font-medium">
-          Roles
-        </h3>
-        <Button
-          onClick={onAddRole}
-          data-testid="add-role-button"
-          className="flex items-center gap-2"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Add Role
-        </Button>
-      </div>
-      <div data-testid="user-roles-list" className="flex flex-wrap gap-2">
-        {Array.isArray(userRoles) &&
-          userRoles.map((userRole) => (
-            <div key={userRole.key} className="flex items-center gap-2">
-              <Badge status="active">{userRole.role}</Badge>
-              <Button variant="ghost" size="sm" onClick={() => handleRemoveRole(userRole)}>
-                Remove
-              </Button>
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h3
+            data-testid="tab-roles"
+            className="text-lg font-semibold text-gray-900 dark:text-white"
+          >
+            Roles
+          </h3>
+          <Button
+            onClick={onAddRole}
+            data-testid="add-role-button"
+            className="flex items-center gap-2"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Add Role
+          </Button>
+        </div>
+        <div data-testid="user-roles-list" className="space-y-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <svg className="animate-spin h-6 w-6 text-blue-600" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
             </div>
-          ))}
-        {(!Array.isArray(userRoles) || userRoles.length === 0) && !isLoading && (
-          <p className="text-sm text-text-tertiary">No roles assigned</p>
-        )}
+          ) : Array.isArray(userRoles) && userRoles.length > 0 ? (
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {userRoles.map((userRole) => (
+                <div
+                  key={userRole.key}
+                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                      {userRole.role}
+                    </span>
+                    {userRole.business_name && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {userRole.business_name}
+                      </span>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => handleRemoveRole(userRole)}>
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400 py-4">No roles assigned</p>
+          )}
+        </div>
       </div>
 
       <ConfirmDialog

@@ -9,7 +9,7 @@ export const useToast = () => {
 
   const showError = (msg) => {
     toast.error(msg, {
-      duration: Infinity,
+      duration: 5000,
     })
   }
 

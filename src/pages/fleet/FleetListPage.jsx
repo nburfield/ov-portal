@@ -1,32 +1,71 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import {
-  getAll as getFleetAssets,
-  create as createFleetAsset,
-  update as updateFleetAsset,
-} from '../../services/fleetasset.service'
+import { fleetassetService } from '../../services/fleetasset.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import FormActions from '../../components/forms/FormActions'
+import CreateFleetAssetModal from '../../components/modals/CreateFleetAssetModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import { validateRequired } from '../../utils/validators'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, EyeIcon, PlusIcon, TruckIcon } from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
 
 const FleetListPage = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
   const [selectedRows, setSelectedRows] = useState([])
+  const { data, isLoading, refetch } = useApiQuery(fleetassetService.getAll)
 
-  const { data: fleetAssets = [], isLoading, refetch } = useApiQuery(getFleetAssets)
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
+    setTypeFilter('')
+  }
+
+  const fleetAssetsData = useMemo(() => {
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.values)) return data.values
+    return []
+  }, [data])
+
+  const filteredFleetAssets = useMemo(() => {
+    let filtered = fleetAssetsData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (asset) =>
+          asset.identifier?.toLowerCase().includes(lowerSearch) ||
+          asset.type?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((asset) => asset.status === statusFilter)
+    }
+
+    if (typeFilter) {
+      filtered = filtered.filter((asset) => asset.type === typeFilter)
+    }
+
+    return filtered
+  }, [fleetAssetsData, searchTerm, statusFilter, typeFilter])
 
   const handleRowClick = (row) => {
     navigate(`/fleet/${row.original.key}`)
@@ -42,7 +81,7 @@ const FleetListPage = () => {
 
   const handleSaveAsset = async (assetData) => {
     try {
-      await createFleetAsset(assetData)
+      await fleetassetService.create(assetData)
       showToast('Asset created successfully', 'success')
       refetch()
       handleCloseModal()
@@ -54,7 +93,7 @@ const FleetListPage = () => {
   const handleBulkChangeStatus = async (newStatus) => {
     try {
       await Promise.all(
-        selectedRows.map((row) => updateFleetAsset(row.original.key, { status: newStatus }))
+        selectedRows.map((row) => fleetassetService.update(row.original.key, { status: newStatus }))
       )
       showToast(
         `${selectedRows.length} asset${selectedRows.length > 1 ? 's' : ''} status updated successfully`,
@@ -69,7 +108,7 @@ const FleetListPage = () => {
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(fleetAssets, columns, 'fleet-assets')
+      exportToCSV(filteredFleetAssets, columns, 'fleet-assets')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -78,7 +117,7 @@ const FleetListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(fleetAssets, columns, 'Fleet Assets Report')
+      exportToPDF(filteredFleetAssets, columns, 'Fleet Assets Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
@@ -96,22 +135,33 @@ const FleetListPage = () => {
     {
       accessorKey: 'type',
       header: 'Type',
-      cell: ({ row }) => <Badge>{row.original.type}</Badge>,
+      cell: ({ row }) => (
+        <Badge status={row.original.type === 'truck' ? 'active' : 'warning'}>
+          {row.original.type}
+        </Badge>
+      ),
       enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        return row.original.type === filterValue
-      },
     },
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <Badge status={row.original.status}>{row.original.status}</Badge>,
-      enableSorting: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true
-        return row.original.status === filterValue
+      cell: ({ row }) => {
+        const status = row.original.status
+        const statusColors = {
+          active: 'bg-green-600',
+          out_of_service: 'bg-red-600',
+        }
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${
+              statusColors[status] || 'bg-gray-600'
+            }`}
+          >
+            {status === 'out_of_service' ? 'Out of Service' : status}
+          </span>
+        )
       },
+      enableSorting: true,
     },
     {
       accessorKey: 'mileage',
@@ -131,16 +181,28 @@ const FleetListPage = () => {
       },
       enableSorting: true,
     },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const asset = row.original
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/fleet/${asset.key}`)
+            }}
+            className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+        )
+      },
+      enableSorting: false,
+    },
   ]
 
-  const emptyState = {
-    title: 'No fleet assets found',
-    description: 'Get started by creating your first asset.',
-    action: {
-      label: '+ New Asset',
-      onClick: handleCreateAsset,
-    },
-  }
+  const hasActiveFilters = searchTerm || statusFilter || typeFilter
 
   const bulkActions =
     selectedRows.length > 0 ? (
@@ -159,179 +221,93 @@ const FleetListPage = () => {
     ) : null
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Fleet</h1>
-        <Button onClick={handleCreateAsset} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />+ New Asset
-        </Button>
+    <div data-testid="fleet-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <TruckIcon className="h-8 w-8 text-blue-600" />
+                Fleet
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your fleet assets ({filteredFleetAssets.length} of{' '}
+                {fleetAssetsData.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button onClick={handleCreateAsset} className="flex items-center gap-2">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                New Asset
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredFleetAssets}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={true}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by identifier or type...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'out_of_service', label: 'Out of Service' },
+                ],
+              },
+              {
+                id: 'type',
+                label: 'Type',
+                value: typeFilter,
+                onChange: (e) => setTypeFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Types' },
+                  { value: 'truck', label: 'Truck' },
+                  { value: 'equipment', label: 'Equipment' },
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+            bulkActions,
+          }}
+          onSelectionChange={setSelectedRows}
+        />
+
+        {showCreateModal && (
+          <CreateFleetAssetModal
+            isOpen={showCreateModal}
+            onClose={handleCloseModal}
+            onSuccess={handleSaveAsset}
+          />
+        )}
       </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={fleetAssets}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={true}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-        initialColumnFilters={[
-          {
-            id: 'status',
-            value: '',
-          },
-          {
-            id: 'type',
-            value: '',
-          },
-        ]}
-      />
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <FleetAssetFormModal asset={null} onSave={handleSaveAsset} onClose={handleCloseModal} />
-      )}
     </div>
-  )
-}
-
-const FleetAssetFormModal = ({ asset, onSave, onClose }) => {
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: asset
-      ? {
-          type: asset.type || '',
-          identifier: asset.identifier || '',
-          status: asset.status || 'active',
-          mileage: asset.mileage || 0,
-        }
-      : {
-          type: '',
-          identifier: '',
-          status: 'active',
-          mileage: 0,
-        },
-  })
-
-  const validateField = (value, fieldName) => {
-    const error = validateRequired(value, fieldName)
-    return error
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      showToast('Failed to save asset', 'error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const isEdit = !!asset
-
-  const typeOptions = [
-    { value: 'truck', label: 'Truck' },
-    { value: 'equipment', label: 'Equipment' },
-  ]
-
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'out_of_service', label: 'Out of Service' },
-  ]
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title={isEdit ? 'Edit Asset' : 'Create Asset'}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Type */}
-        <div>
-          <label
-            htmlFor="type"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Type <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="type"
-            {...register('type', {
-              validate: (value) => validateField(value, 'Type'),
-            })}
-            error={errors.type?.message}
-            options={typeOptions}
-          />
-        </div>
-
-        {/* Identifier */}
-        <div>
-          <label
-            htmlFor="identifier"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Identifier <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="identifier"
-            {...register('identifier', {
-              validate: (value) => validateField(value, 'Identifier'),
-            })}
-            error={errors.identifier?.message}
-          />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Status <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="status"
-            {...register('status', {
-              validate: (value) => validateField(value, 'Status'),
-            })}
-            error={errors.status?.message}
-            options={statusOptions}
-          />
-        </div>
-
-        {/* Mileage */}
-        <div>
-          <label
-            htmlFor="mileage"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Mileage <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="mileage"
-            type="number"
-            step="1"
-            {...register('mileage', {
-              validate: (value) => validateField(value, 'Mileage'),
-            })}
-            error={errors.mileage?.message}
-          />
-        </div>
-
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
   )
 }
 

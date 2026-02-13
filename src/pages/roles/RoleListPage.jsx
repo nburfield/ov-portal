@@ -1,38 +1,64 @@
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import React, { useState, useMemo } from 'react'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import * as userroleService from '../../services/userrole.service'
-import * as userService from '../../services/user.service'
-import { useBusiness } from '../../hooks/useBusiness'
+import { userroleService } from '../../services/userrole.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import SearchableSelect from '../../components/ui/SearchableSelect'
-import FormActions from '../../components/forms/FormActions'
+import AssignRoleModal from '../../components/modals/AssignRoleModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import { validateRequired } from '../../utils/validators'
+import { ArrowPathIcon, PlusIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
 import { ROLES } from '../../constants/roles'
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 const RoleListPage = () => {
-  const { activeBusiness } = useBusiness()
   const { showToast } = useToast()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
   const [selectedRows, setSelectedRows] = useState([])
 
   const {
     data: userroles = [],
     isLoading,
     refetch,
-  } = useApiQuery(
-    () => userroleService.getAll({ business_key: activeBusiness?.business_key }),
-    [activeBusiness?.business_key]
-  )
+  } = useApiQuery(() => userroleService.getAll(), [])
+
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setRoleFilter('')
+  }
+
+  const filteredRoles = useMemo(() => {
+    let filtered = Array.isArray(userroles) ? userroles : []
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (role) =>
+          role.user_name?.toLowerCase().includes(lowerSearch) ||
+          `${role.user?.first_name} ${role.user?.last_name}`.toLowerCase().includes(lowerSearch) ||
+          role.role?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (roleFilter) {
+      filtered = filtered.filter((role) => role.role === roleFilter)
+    }
+
+    return filtered
+  }, [userroles, searchTerm, roleFilter])
 
   const handleAssignRole = () => {
     setShowCreateModal(true)
@@ -44,10 +70,7 @@ const RoleListPage = () => {
 
   const handleSaveRole = async (roleData) => {
     try {
-      await userroleService.create({
-        ...roleData,
-        business_key: activeBusiness.business_key,
-      })
+      await userroleService.create(roleData)
       showToast('Role assigned successfully', 'success')
       refetch()
       handleCloseModal()
@@ -76,7 +99,7 @@ const RoleListPage = () => {
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(userroles, columns, 'user-roles')
+      exportToCSV(filteredRoles, columns, 'user-roles')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -85,7 +108,7 @@ const RoleListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(userroles, columns, 'User Roles Report')
+      exportToPDF(filteredRoles, columns, 'User Roles Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
@@ -96,7 +119,14 @@ const RoleListPage = () => {
     {
       accessorKey: 'user_name',
       header: 'User',
-      cell: ({ row }) => `${row.original.user?.first_name} ${row.original.user?.last_name}`,
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium text-gray-900 dark:text-white">
+            {row.original.user?.first_name} {row.original.user?.last_name}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.user?.email}</div>
+        </div>
+      ),
       enableSorting: true,
       filterFn: 'includesString',
     },
@@ -111,27 +141,25 @@ const RoleListPage = () => {
       },
     },
     {
-      accessorKey: 'business_name',
-      header: 'Business',
-      cell: ({ row }) => row.original.business?.name || activeBusiness?.name,
-      enableSorting: true,
-    },
-    {
       accessorKey: 'created_at',
       header: 'Created',
-      cell: ({ row }) => formatters.formatRelativeDate(new Date(row.original.created_at)),
+      cell: ({ row }) =>
+        row.original.created_at
+          ? formatters.formatDateTime(new Date(row.original.created_at * 1000))
+          : 'N/A',
       enableSorting: true,
     },
   ]
 
-  const emptyState = {
-    title: 'No roles assigned',
-    description: 'Assign roles to users to control their access within the business.',
-    action: {
-      label: 'Assign Role',
-      onClick: handleAssignRole,
-    },
-  }
+  const hasActiveFilters = searchTerm || roleFilter
+
+  const roleOptions = [
+    { value: '', label: 'All Roles' },
+    { value: ROLES.OWNER, label: 'Owner' },
+    { value: ROLES.MANAGER, label: 'Manager' },
+    { value: ROLES.WORKER, label: 'Worker' },
+    { value: ROLES.CUSTOMER, label: 'Customer' },
+  ]
 
   const bulkActions =
     selectedRows.length > 0 ? (
@@ -142,140 +170,76 @@ const RoleListPage = () => {
     ) : null
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Roles</h1>
-        <Button onClick={handleAssignRole} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
-          Assign Role
-        </Button>
-      </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={userroles}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        enableSelection={true}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-        initialColumnFilters={[
-          {
-            id: 'role',
-            value: '',
-          },
-        ]}
-      />
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <AssignRoleModal
-          activeBusiness={activeBusiness}
-          onSave={handleSaveRole}
-          onClose={handleCloseModal}
-        />
-      )}
-    </div>
-  )
-}
-
-const AssignRoleModal = ({ activeBusiness, onSave, onClose }) => {
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: {
-      user_key: '',
-      role: '',
-    },
-  })
-
-  const selectedUserKey = watch('user_key')
-
-  const loadUsers = async (searchTerm) => {
-    try {
-      const users = await userService.getAll({
-        business_key: activeBusiness.business_key,
-        search: searchTerm,
-      })
-      return users.map((user) => ({
-        value: user.key,
-        label: `${user.first_name} ${user.last_name} (${user.email})`,
-      }))
-    } catch {
-      return []
-    }
-  }
-
-  const validateField = (value, fieldName) => {
-    const error = validateRequired(value, fieldName)
-    return error
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      // Error handled in parent
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const roleOptions = [
-    { value: ROLES.OWNER, label: 'Owner' },
-    { value: ROLES.MANAGER, label: 'Manager' },
-    { value: ROLES.WORKER, label: 'Worker' },
-    { value: ROLES.CUSTOMER, label: 'Customer' },
-  ]
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Assign Role" size="md">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* User */}
-        <SearchableSelect
-          label="User"
-          value={selectedUserKey}
-          onChange={(value) => setValue('user_key', value)}
-          loadOptions={loadUsers}
-          placeholder="Search for a user..."
-          error={errors.user_key?.message}
-          required
-        />
-
-        {/* Role */}
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Role <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="role"
-            {...register('role', {
-              validate: (value) => validateField(value, 'Role'),
-            })}
-            error={errors.role?.message}
-            options={roleOptions}
-          />
+    <div data-testid="roles-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <UserGroupIcon className="h-8 w-8 text-blue-600" />
+                Roles
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage role assignments ({filteredRoles.length} of {userroles.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button onClick={handleAssignRole} className="flex items-center gap-2">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Assign Role
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
+        <DataTable
+          columns={columns}
+          data={filteredRoles}
+          isLoading={isLoading}
+          enableSelection={true}
+          onSelectionChange={setSelectedRows}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          bulkActions={bulkActions}
+          filterBar={{
+            searchPlaceholder: 'Search by user or role...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'role',
+                label: 'Role',
+                value: roleFilter,
+                onChange: (e) => setRoleFilter(e.target.value),
+                options: roleOptions,
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+        />
+
+        {showCreateModal && (
+          <AssignRoleModal
+            isOpen={showCreateModal}
+            onClose={handleCloseModal}
+            onSuccess={handleSaveRole}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 

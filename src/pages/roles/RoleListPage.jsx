@@ -20,11 +20,9 @@ const RoleListPage = () => {
   const [roleFilter, setRoleFilter] = useState('')
   const [selectedRows, setSelectedRows] = useState([])
 
-  const {
-    data: userroles = [],
-    isLoading,
-    refetch,
-  } = useApiQuery(() => userroleService.getAll(), [])
+  const { data: response, isLoading, refetch } = useApiQuery(() => userroleService.getAll(), [])
+
+  const userroles = response?.values || []
 
   const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
 
@@ -41,15 +39,14 @@ const RoleListPage = () => {
   }
 
   const filteredRoles = useMemo(() => {
-    let filtered = Array.isArray(userroles) ? userroles : []
+    let filtered = userroles
 
     if (searchTerm.trim()) {
       const lowerSearch = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (role) =>
-          role.user_name?.toLowerCase().includes(lowerSearch) ||
-          `${role.user?.first_name} ${role.user?.last_name}`.toLowerCase().includes(lowerSearch) ||
-          role.role?.toLowerCase().includes(lowerSearch)
+          role.role?.toLowerCase().includes(lowerSearch) ||
+          role.user_key?.toLowerCase().includes(lowerSearch)
       )
     }
 
@@ -117,14 +114,14 @@ const RoleListPage = () => {
 
   const columns = [
     {
-      accessorKey: 'user_name',
+      accessorKey: 'user_key',
       header: 'User',
       cell: ({ row }) => (
         <div>
-          <div className="font-medium text-gray-900 dark:text-white">
-            {row.original.user?.first_name} {row.original.user?.last_name}
+          <div className="font-medium text-gray-900 dark:text-white">User Key</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+            {row.original.user_key}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.user?.email}</div>
         </div>
       ),
       enableSorting: true,
@@ -141,11 +138,11 @@ const RoleListPage = () => {
       },
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'created_dt',
       header: 'Created',
       cell: ({ row }) =>
-        row.original.created_at
-          ? formatters.formatDateTime(new Date(row.original.created_at * 1000))
+        row.original.created_dt
+          ? formatters.formatDateTime(new Date(row.original.created_dt * 1000))
           : 'N/A',
       enableSorting: true,
     },

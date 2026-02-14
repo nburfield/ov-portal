@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { userService } from '../../services/user.service'
 import { userserviceService } from '../../services/userservice.service'
@@ -17,13 +16,11 @@ import Modal from '../../components/ui/Modal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
-import FormActions from '../../components/forms/FormActions'
 import DataTable from '../../components/data-table/DataTable'
-import { validateEmail, validatePhone, validateRequired } from '../../utils/validators'
+import EditUserModal from '../../components/modals/EditUserModal'
 import {
   ArrowLeftIcon,
   PencilIcon,
-  TrashIcon,
   ClipboardDocumentIcon,
   PlusIcon,
   ArrowPathIcon,
@@ -48,7 +45,7 @@ const UserDetailPage = () => {
   } = useApiQuery(() => userService.getByKey(key))
 
   const {
-    data: userRoles = [],
+    data: rolesResponse,
     isLoading: rolesLoading,
     refetch: refetchRoles,
   } = useApiQuery(
@@ -56,17 +53,23 @@ const UserDetailPage = () => {
     { enabled: !!activeBusiness }
   )
 
+  const userRoles = rolesResponse?.values || []
+
   const {
-    data: certifications = [],
+    data: certsResponse,
     isLoading: certsLoading,
     refetch: _refetchCerts,
   } = useApiQuery(() => userserviceService.getAll({ user_key: key }), { enabled: !!user })
 
+  const certifications = certsResponse?.values || []
+
   const {
-    data: workTasks = [],
+    data: tasksResponse,
     isLoading: tasksLoading,
     refetch: _refetchTasks,
   } = useApiQuery(() => worktaskService.getAll({ assigned_user_key: key }), { enabled: !!user })
+
+  const workTasks = tasksResponse?.values || []
 
   const handleBack = () => {
     navigate('/users')
@@ -95,10 +98,6 @@ const UserDetailPage = () => {
 
   const handleEdit = () => {
     setShowEditModal(true)
-  }
-
-  const handleDelete = () => {
-    setShowDeleteDialog(true)
   }
 
   const handleConfirmDelete = async () => {
@@ -279,10 +278,10 @@ const UserDetailPage = () => {
 
         {showEditModal && (
           <EditUserModal
+            isOpen={showEditModal}
             user={user}
-            onSave={async () => {
+            onSuccess={async () => {
               await refetchUser()
-              setShowEditModal(false)
             }}
             onClose={() => setShowEditModal(false)}
           />
@@ -417,7 +416,22 @@ const DetailsTab = ({ user }) => {
             </label>
             <input
               type="text"
-              value={user.created_at ? formatters.formatDateTime(user.created_at) : 'N/A'}
+              value={
+                user.created_dt
+                  ? formatters.formatDateTime(new Date(user.created_dt * 1000))
+                  : 'N/A'
+              }
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Created User
+            </label>
+            <input
+              type="text"
+              value={user.created_user || 'N/A'}
               className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
               readOnly
             />
@@ -428,7 +442,22 @@ const DetailsTab = ({ user }) => {
             </label>
             <input
               type="text"
-              value={user.updated_at ? formatters.formatDateTime(user.updated_at) : 'N/A'}
+              value={
+                user.updated_dt
+                  ? formatters.formatDateTime(new Date(user.updated_dt * 1000))
+                  : 'N/A'
+              }
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+              readOnly
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Updated User
+            </label>
+            <input
+              type="text"
+              value={user.updated_user || 'N/A'}
               className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
               readOnly
             />
@@ -586,7 +615,7 @@ const WorkHistoryTab = ({ workTasks, isLoading }) => {
     {
       accessorKey: 'created_at',
       header: 'Created',
-      cell: ({ row }) => formatters.formatRelativeDate(new Date(row.original.created_at)),
+      cell: ({ row }) => formatters.formatRelativeDate(new Date(row.original.created_at * 1000)),
     },
     {
       accessorKey: 'due_date',
@@ -607,146 +636,6 @@ const WorkHistoryTab = ({ workTasks, isLoading }) => {
         description: 'This user has no assigned work tasks.',
       }}
     />
-  )
-}
-
-const EditUserModal = ({ user, onSave, onClose }) => {
-  const { showSuccess, showError } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      first_name: user.first_name || '',
-      last_name: user.last_name || '',
-      user_name: user.user_name || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      status: user.status || 'active',
-    },
-  })
-
-  const validateField = (value, fieldName, validator) => {
-    const requiredError = validateRequired(value, fieldName)
-    if (requiredError) return requiredError
-
-    if (validator) {
-      return validator(value)
-    }
-    return null
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await userService.update(user.key, data)
-      showSuccess('User updated successfully')
-      onSave(data)
-    } catch {
-      showError('Failed to update user')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Edit User">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label htmlFor="first_name" className="block text-sm font-medium text-text-primary mb-1">
-            First Name <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="first_name"
-            {...register('first_name', {
-              validate: (value) => validateField(value, 'First name'),
-            })}
-            error={errors.first_name?.message}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="last_name" className="block text-sm font-medium text-text-primary mb-1">
-            Last Name <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="last_name"
-            {...register('last_name', {
-              validate: (value) => validateField(value, 'Last name'),
-            })}
-            error={errors.last_name?.message}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="user_name" className="block text-sm font-medium text-text-primary mb-1">
-            Username <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="user_name"
-            {...register('user_name', {
-              validate: (value) => validateField(value, 'Username'),
-            })}
-            error={errors.user_name?.message}
-            disabled
-          />
-          <p className="text-sm text-text-tertiary mt-1">
-            Username cannot be changed after creation
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
-            Email <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="email"
-            type="email"
-            {...register('email', {
-              validate: (value) => validateField(value, 'Email', validateEmail),
-            })}
-            error={errors.email?.message}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1">
-            Phone
-          </label>
-          <Input
-            id="phone"
-            type="tel"
-            {...register('phone', {
-              validate: (value) => (value ? validatePhone(value) : null),
-            })}
-            error={errors.phone?.message}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-text-primary mb-1">
-            Status <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="status"
-            {...register('status', {
-              validate: (value) => validateField(value, 'Status'),
-            })}
-            error={errors.status?.message}
-            options={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-              { value: 'archived', label: 'Archived' },
-            ]}
-          />
-        </div>
-
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
   )
 }
 

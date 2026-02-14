@@ -1,29 +1,75 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { serviceService } from '../../services/service.service'
 import DataTable from '../../components/data-table/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
-import Textarea from '../../components/ui/Textarea'
-import FormActions from '../../components/forms/FormActions'
+import CreateServiceModal from '../../components/modals/CreateServiceModal'
 import { useToast } from '../../hooks/useToast'
 import { formatters } from '../../utils/formatters'
 import { exportToCSV, exportToPDF } from '../../utils/export'
-import { validateRequired } from '../../utils/validators'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import {
+  ArrowPathIcon,
+  EyeIcon,
+  PlusIcon,
+  WrenchScrewdriverIcon,
+} from '@heroicons/react/24/outline'
+import { debounce } from 'lodash'
 
 const ServiceListPage = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [selectedRows, setSelectedRows] = useState([])
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [unitFilter, setUnitFilter] = useState('')
+  const { data, isLoading, refetch } = useApiQuery(serviceService.getAll)
 
-  const { data: services = [], isLoading, refetch } = useApiQuery(serviceService.getAll)
+  const debouncedSetSearchTerm = useMemo(() => debounce((value) => setSearchTerm(value), 300), [])
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchInput(value)
+    debouncedSetSearchTerm(value)
+  }
+
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchTerm('')
+    setStatusFilter('')
+    setUnitFilter('')
+  }
+
+  const servicesData = useMemo(() => {
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.values)) return data.values
+    return []
+  }, [data])
+
+  const filteredServices = useMemo(() => {
+    let filtered = servicesData
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (service) =>
+          service.name?.toLowerCase().includes(lowerSearch) ||
+          service.description?.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((service) => service.status === statusFilter)
+    }
+
+    if (unitFilter) {
+      filtered = filtered.filter((service) => service.unit === unitFilter)
+    }
+
+    return filtered
+  }, [servicesData, searchTerm, statusFilter, unitFilter])
 
   const handleRowClick = (row) => {
     navigate(`/services/${row.original.key}`)
@@ -44,29 +90,13 @@ const ServiceListPage = () => {
       refetch()
       handleCloseModal()
     } catch {
-      showToast('Failed to save service', 'error')
-    }
-  }
-
-  const handleBulkChangeStatus = async (newStatus) => {
-    try {
-      await Promise.all(
-        selectedRows.map((row) => serviceService.update(row.original.key, { status: newStatus }))
-      )
-      showToast(
-        `${selectedRows.length} service${selectedRows.length > 1 ? 's' : ''} status updated successfully`,
-        'success'
-      )
-      setSelectedRows([])
-      refetch()
-    } catch {
-      showToast('Failed to update service statuses', 'error')
+      showToast('Failed to create service', 'error')
     }
   }
 
   const handleExportCSV = () => {
     try {
-      exportToCSV(services, columns, 'services')
+      exportToCSV(filteredServices, columns, 'services')
       showToast('CSV exported successfully', 'success')
     } catch {
       showToast('Failed to export CSV', 'error')
@@ -75,7 +105,7 @@ const ServiceListPage = () => {
 
   const handleExportPDF = () => {
     try {
-      exportToPDF(services, columns, 'Services Report')
+      exportToPDF(filteredServices, columns, 'Services Report')
       showToast('PDF exported successfully', 'success')
     } catch {
       showToast('Failed to export PDF', 'error')
@@ -124,222 +154,128 @@ const ServiceListPage = () => {
         return row.original.status === filterValue
       },
     },
-  ]
-
-  const emptyState = {
-    title: 'No services found',
-    description: 'Get started by creating your first service.',
-    action: {
-      label: 'Create Service',
-      onClick: handleCreateService,
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const service = row.original
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/services/${service.key}`)
+            }}
+            className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+        )
+      },
+      enableSorting: false,
     },
-  }
+  ]
 
-  const bulkActions =
-    selectedRows.length > 0 ? (
-      <div className="flex gap-2">
-        <Button onClick={() => handleBulkChangeStatus('active')} variant="outline" size="sm">
-          Set Active
-        </Button>
-        <Button onClick={() => handleBulkChangeStatus('inactive')} variant="outline" size="sm">
-          Set Inactive
-        </Button>
-        <Button onClick={() => handleBulkChangeStatus('archived')} variant="outline" size="sm">
-          Archive
-        </Button>
-      </div>
-    ) : null
+  const hasActiveFilters = searchTerm || statusFilter || unitFilter
+
+  const uniqueUnits = useMemo(() => {
+    const units = new Set()
+    servicesData.forEach((service) => {
+      if (service.unit) units.add(service.unit)
+    })
+    return Array.from(units).sort()
+  }, [servicesData])
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Services</h1>
-        <Button onClick={handleCreateService} className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />+ New Service
-        </Button>
+    <div data-testid="services-page" className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-9/10 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <WrenchScrewdriverIcon className="h-8 w-8 text-blue-600" />
+                Services
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your services ({filteredServices.length} of {servicesData.length || 0} total)
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => refetch()}
+                variant="secondary"
+                className="inline-flex items-center"
+                disabled={isLoading}
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleCreateService}
+                data-testid="create-service-button"
+                className="flex items-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Create Service
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredServices}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          enableSelection={true}
+          initialPagination={{ pageIndex: 0, pageSize: 25 }}
+          variant="rounded"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+          filterBar={{
+            searchPlaceholder: 'Search by name or description...',
+            searchValue: searchInput,
+            onSearchChange: handleSearchInputChange,
+            advancedFilters: [
+              {
+                id: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: (e) => setStatusFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Statuses' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'archived', label: 'Archived' },
+                ],
+              },
+              {
+                id: 'unit',
+                label: 'Unit',
+                value: unitFilter,
+                onChange: (e) => setUnitFilter(e.target.value),
+                options: [
+                  { value: '', label: 'All Units' },
+                  ...uniqueUnits.map((unit) => ({ value: unit, label: unit })),
+                ],
+              },
+            ],
+            onClearFilters: handleClearFilters,
+            hasActiveFilters,
+            onExportCSV: handleExportCSV,
+            onExportPDF: handleExportPDF,
+          }}
+          bulkActions={null}
+          onSelectionChange={() => {}}
+        />
+
+        {showCreateModal && (
+          <CreateServiceModal
+            isOpen={showCreateModal}
+            onClose={handleCloseModal}
+            onSuccess={handleSaveService}
+          />
+        )}
       </div>
-
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={services}
-        isLoading={isLoading}
-        emptyState={emptyState}
-        onRowClick={handleRowClick}
-        enableSelection={true}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
-        bulkActions={bulkActions}
-        onSelectionChange={setSelectedRows}
-        initialColumnFilters={[
-          {
-            id: 'unit',
-            value: '',
-          },
-          {
-            id: 'status',
-            value: '',
-          },
-        ]}
-      />
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <ServiceFormModal service={null} onSave={handleSaveService} onClose={handleCloseModal} />
-      )}
     </div>
-  )
-}
-
-const ServiceFormModal = ({ service, onSave, onClose }) => {
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: service
-      ? {
-          name: service.name || '',
-          description: service.description || '',
-          default_price: service.default_price || '',
-          unit: service.unit || 'hour',
-          status: service.status || 'active',
-        }
-      : {
-          name: '',
-          description: '',
-          default_price: '',
-          unit: 'hour',
-          status: 'active',
-        },
-  })
-
-  const validateField = (value, fieldName) => {
-    const error = validateRequired(value, fieldName)
-    return error
-  }
-
-  const onSubmit = async (data) => {
-    setIsLoading(true)
-    try {
-      await onSave(data)
-      reset()
-    } catch {
-      showToast('Failed to save service', 'error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const isEdit = !!service
-
-  const unitOptions = [
-    { value: 'hour', label: 'Hour' },
-    { value: 'job', label: 'Job' },
-    { value: 'mile', label: 'Mile' },
-    { value: 'sq_ft', label: 'Sq Ft' },
-  ]
-
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'archived', label: 'Archived' },
-  ]
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title={isEdit ? 'Edit Service' : 'Create Service'}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name */}
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Name <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="name"
-            {...register('name', {
-              validate: (value) => validateField(value, 'Name'),
-            })}
-            error={errors.name?.message}
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Description
-          </label>
-          <Textarea id="description" {...register('description')} rows={3} />
-        </div>
-
-        {/* Default Price */}
-        <div>
-          <label
-            htmlFor="default_price"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Default Price <span className="text-danger">*</span>
-          </label>
-          <Input
-            id="default_price"
-            type="number"
-            step="0.01"
-            {...register('default_price', {
-              validate: (value) => validateField(value, 'Default price'),
-            })}
-            error={errors.default_price?.message}
-          />
-        </div>
-
-        {/* Unit */}
-        <div>
-          <label
-            htmlFor="unit"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Unit <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="unit"
-            {...register('unit', {
-              validate: (value) => validateField(value, 'Unit'),
-            })}
-            error={errors.unit?.message}
-            options={unitOptions}
-          />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-text-primary mb-1"
-          >
-            Status <span className="text-danger">*</span>
-          </label>
-          <Select
-            id="status"
-            {...register('status', {
-              validate: (value) => validateField(value, 'Status'),
-            })}
-            error={errors.status?.message}
-            options={statusOptions}
-          />
-        </div>
-
-        <FormActions onSave={handleSubmit(onSubmit)} onCancel={onClose} loading={isLoading} />
-      </form>
-    </Modal>
   )
 }
 
